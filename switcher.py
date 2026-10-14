@@ -5,6 +5,8 @@ from tkinter.ttk import *
 from tkinter import font
 from pathlib import Path
 import webbrowser
+from PIL import Image, ImageTk
+from app_card import AppCard
 
 #Open Etsy URL (for image)
 def openEtsyURL(event):
@@ -17,8 +19,9 @@ root.title("Python App Switcher")
 root.geometry("800x600+150+150")
 root.resizable(False, False)
 root.configure(bg="#000000", takefocus=True)
-# Configure the root grid to center content horizontally
+# Configure the root grid to center content horizontally, add more of these for newly added apps
 root.columnconfigure(0, weight=1)
+root.columnconfigure(1, weight=1)
 
 #Initialise fonts
 titleFont = font.Font(family="IBM Plex Mono", size=30, underline=True, weight="bold")
@@ -49,21 +52,40 @@ hackClubLogo = tk.PhotoImage(file=photo1_image_path)
 photo3_image_path = Path(__file__).parent / "Assets" / "photo3.png"
 myLogo = tk.PhotoImage(file=photo3_image_path)
 photo4_image_path = Path(__file__).parent / "Assets" / "photo4.png"
-appLogo = tk.PhotoImage(file=photo4_image_path)
 
-myLogo_mainLabel = tk.Label(root, image=myLogo)
-myLogo_mainLabel.grid(row=2, column=0, pady=10) # Row 2, centered
+#What do launch buttons do?
+def launch_etsy():
+    print("Launching Etsy Website!")
 
-#Launch App Button
-launchAppButton = tk.Button(root,
-    text="Launch App",
-    command=None,
-    bg="#00FF00",
-    fg="#000000",
-    activebackground="#000000",
-    activeforeground="#00FF00"
-)
-launchAppButton.grid(row=3, column=0, pady=20) # Row 3, centered
+def launch_app2():
+    print("Launching App 2")
+
+#App Data List (Inventory)
+apps_inventory = [
+    {
+        "path": Path(__file__).parent / "Assets" / "photo3.png",
+        "desc": "My Etsy Shop, check it out!",
+        "action": launch_etsy
+    },
+    {
+        "path": Path(__file__).parent / "Assets" / "photo4.png",
+        "desc": "App 2!",
+        "action": launch_app2
+    }
+]
+
+#Build the grid
+for index, app_data in enumerate(apps_inventory):
+    #Create card instance using the class
+    card = AppCard(
+        parent_window=root,
+        image_path=app_data["path"],
+        description_text=app_data["desc"],
+        launch_command=["action"]
+    )
+
+    #Add it dynamically to the window
+    card.place_card(row_num=2, col_num=index)
 
 #Initialising menubar
 menubar = tk.Menu(root)
