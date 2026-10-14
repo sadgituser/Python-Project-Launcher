@@ -4,6 +4,12 @@ import tkinter as tk
 from tkinter.ttk import *
 from tkinter import font
 from pathlib import Path
+import webbrowser
+
+#Open Etsy URL (for image)
+def openEtsyURL(event):
+    webbrowser.open_new("https://theprintedcraftuk.etsy.com")
+
 
 #Initialise root window
 root = tk.Tk()
@@ -11,7 +17,6 @@ root.title("Python App Switcher")
 root.geometry("800x600+150+150")
 root.resizable(False, False)
 root.configure(bg="#000000", takefocus=True)
-
 # Configure the root grid to center content horizontally
 root.columnconfigure(0, weight=1)
 
@@ -38,11 +43,16 @@ descriptionLabel = tk.Label(root,
 )
 descriptionLabel.grid(row=1, column=0, pady=10) # Row 1, centered
 
-#Putting up an image of the Etsy Shop logo - placeholder
-image_path = Path(__file__).parent / "Assets" / "photo3.png"
-myLogo = tk.PhotoImage(file=image_path)
-myLogo_label = tk.Label(root, image=myLogo)
-myLogo_label.grid(row=2, column=0, pady=10) # Row 2, centered
+#Image Paths and Image Initialisation
+photo1_image_path = Path(__file__).parent / "Assets" / "photo1.png"
+hackClubLogo = tk.PhotoImage(file=photo1_image_path)
+photo3_image_path = Path(__file__).parent / "Assets" / "photo3.png"
+myLogo = tk.PhotoImage(file=photo3_image_path)
+photo4_image_path = Path(__file__).parent / "Assets" / "photo4.png"
+appLogo = tk.PhotoImage(file=photo4_image_path)
+
+myLogo_mainLabel = tk.Label(root, image=myLogo)
+myLogo_mainLabel.grid(row=2, column=0, pady=10) # Row 2, centered
 
 #Launch App Button
 launchAppButton = tk.Button(root,
@@ -66,15 +76,16 @@ fileMenu.add_separator()
 fileMenu.add_command(label="Remove Switches", command=None)
 
 #Smaller fonts for 'About Me' window
-aboutMeTitleFont = font.Font(family="IBM Plex Mono", size=14, weight="bold", underline=True)
-aboutMeDescriptionFont = font.Font(family="IBM Plex Mono", size=8)
+aboutMeTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold", underline=True)
+aboutMeDescriptionFont = font.Font(family="IBM Plex Mono", size=14)
+
 
 #Initialise 'About Me' window (function)
 def openAboutMeWindow():
     #Start and configure 'About Me' window
     aboutMeWindow = tk.Toplevel(root)
     aboutMeWindow.title("About Me")
-    aboutMeWindow.geometry("300x200+50+50")
+    aboutMeWindow.geometry("650x375+50+50")
     aboutMeWindow.resizable(False, False)
     aboutMeWindow.transient(root)
     aboutMeWindow.columnconfigure(0, weight=1)
@@ -102,10 +113,15 @@ def openAboutMeWindow():
         bg="#000000",
         fg="#00FF00",
         width=16,
-        wraplength=275,
+        wraplength=625,
         justify="left"
     )
-    aboutMeDescriptionLabel.grid(row=1, pady=5, sticky="EW")
+    aboutMeDescriptionLabel.grid(row=1, pady=7, sticky="EW")
+
+    #Etsy Logo
+    myLogo_descriptionLabel = tk.Label(aboutMeWindow, image=myLogo, cursor="hand2")
+    myLogo_descriptionLabel.grid(row=2, column=0, pady=10)
+    myLogo_descriptionLabel.bind("<Button-1>", openEtsyURL)
 
 
 #Add 'About Me' menu to menubar - placeholder
