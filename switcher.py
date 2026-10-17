@@ -170,7 +170,8 @@ def save_apps():
             "path": img_str,
             "desc": app["desc"],
             "target": app["target"],
-            "type": app["type"]
+            "type": app["type"],
+            "protected": app.get("protected", False)
         })
     with open(CONFIG_FILE, "w") as f:
         json.dump(data_to_save, f, indent=4)
@@ -182,14 +183,16 @@ def load_apps():
             "desc": "My Etsy Shop. Check it out!",
             "action": launch_etsy,
             "target": "https://theprintedcraftuk.etsy.com",
-            "type": "url"
+            "type": "url",
+            "protected": True
         },
         {
             "path": photo4_image_path,
             "desc": "App 2!",
             "action": launch_app2,
-            "target": "",
-            "type": "print"
+            "target": "https://www.youtube.com/watch?v=a7Lq6ZlSqys",
+            "type": "url",
+            "protected": True
         }
     ]
 
@@ -204,6 +207,7 @@ def load_apps():
         for item in saved_data:
             target = item["target"]
             app_type = item["type"]
+            protected = item.get("protected", False)
 
             if app_type == "url":
                 act = lambda u=target: webbrowser.open_new(u)
@@ -217,7 +221,8 @@ def load_apps():
                 "desc": item["desc"],
                 "action": act,
                 "target": target,
-                "type": app_type
+                "type": app_type,
+                "protected": protected
             })
         return loaded_inventory
     except Exception as e:
@@ -227,16 +232,27 @@ def load_apps():
 apps_inventory = load_apps()
 
 def refresh_app_grid():
+    for widget in root.grid_slaves():
+        info = widget.grid_info()
+        if int(info.get("row", 0)) >= 2:
+            widget.destroy()
+
+
     for index, app_data in enumerate(apps_inventory):
         row_num = 2 + (index // 2)
         col_num = index % 2
-        card = AppCard(
-            parent_window=root,
-            image_path=app_data["path"],
-            description_text=app_data["desc"],
-            launch_command=app_data["action"]
-        )
-        card.place_card(row_num=row_num, col_num=col_num)
+
+    img_path = app_data["path"]
+    if img_path != myLogo and not isinstance(img_path, Path):
+        img_path = Path(img_path)
+
+    card = AppCard(
+        parent_window=root,
+        image_path=app_data["path"],
+        description_text=app_data["desc"],
+        launch_command=app_data["action"]
+    )
+    card.place_card(row_num=row_num, col_num=col_num)
 
 # Build the initial grid
 refresh_app_grid()
@@ -246,6 +262,82 @@ smallWindowTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold",
 smallWindowDescriptionFont = font.Font(family="IBM Plex Mono", size=14)
 smallWindowButtonFont = font.Font(family="IBM Plex Mono", size=10, underline=True, weight="bold")
 smallWindowEntryFont = font.Font(family="IBM Plex Mono", size=12)
+
+def openRemoveAppWindow():
+    global userRemoveAppEntry
+    userRemoveAppEntry = StringVar()
+
+    removeAppWindow = Toplevel(root)
+    removeAppWindow.title("Remove App")
+    removeAppWindow.geometry("650x375+50+50")
+    removeAppWindow.resizable(False, False)
+    removeAppWindow.transient(root)
+    removeAppWindow.columnconfigure(0, weight=1)
+    removeAppWindow.configure(ng="#000000", takefocus=True)
+
+    removeAppTitleLabel = Label(removeAppWindow,
+        text="Remove an App",
+        font=smallWindowTitleFont,
+        bg="#000000",
+        fg="#00FF00",
+        width=15
+    )
+    removeAppTitleLabel.grid(row=0, column=0, pady=7)
+
+    removeAppDescriptionLabel = Label(removeAppWindow,
+        text="Enter the exact description of the app you want to remove below. " \
+        "(Note: Default apps cannot be removed!)",
+        font=smallWindowDescriptionFont,
+        bg="#000000",
+        fg="#00FF00",
+        width=16,
+        wraplength=625,
+        justify="left"
+    )
+    removeAppDescriptionLabel.grid(row=1, pady=8, sticky="EW")
+
+    removeAppDescriptionTextEntry = Entry(removeAppWindow,
+        bg="#FFFFFF",
+        fg="#000000",
+        font=smallWindowEntryFont,
+        justify="left",
+        textvariable=userRemoveAppEntry
+    )
+    removeAppDescriptionTextEntry.grid(row=2, pady=9)
+
+    def executeRemoveApp():
+        target_desc = userRemoveAppEntry.get().strip()
+        global apps_inventory
+
+        found = False
+        for app in apps_inventory:
+            if app["desc"] == target_desc:
+                found = True
+                if app.get("protected", False):
+                    print("Action Denied: Cannot remove protected default app!")
+                    removeAppWindow.destroy()
+                    return
+                
+                apps_inventory.remove(app)
+                save_apps()
+                refresh_app_grid()
+                print(f"Successfully removed app: {target_desc}")
+                break
+        
+        if not found:
+            print(f"No app found with description: {target_desc}")
+
+        removeAppWindow.destroy()
+
+    removeAppButton = Button(removeAppWindow,
+        text="REMOVE APP",
+        font=smallWindowButtonFont,
+        bg="#00FF00",
+        fg="#000000",
+        command=executeRemoveApp
+    )
+    removeAppButton.grid(row=3, pady=9)
+
 
 #Initialise 'About Me' window (function)
 def openAboutMeWindow():
@@ -400,7 +492,7 @@ fileMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="File", menu=fileMenu)
 fileMenu.add_command(label="Add New Switch/App", command=openNewAppWindow)
 fileMenu.add_separator()
-fileMenu.add_command(label="Remove Switches/Apps", command=None)
+fileMenu.add_command(label="Remove Switches/Apps", command=openRemoveAppWindow)
 
 aboutMeMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="About Me", menu=aboutMeMenu)
