@@ -1,5 +1,6 @@
-#Python app switcher
 #Imports
+import json
+import time
 import tkinter as tk
 from tkinter.ttk import *
 from tkinter import *
@@ -20,7 +21,7 @@ def openEtsyURL(event):
 root = tk.Tk()
 root.title("Python App Switcher")
 root.geometry("800x600+150+150")
-root.resizable(False, False)
+root.minsize(800, 600)
 root.configure(bg="#000000", takefocus=True)
 
 # Configure the 2 columns to center content horizontally
@@ -62,7 +63,7 @@ def launch_etsy():
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
 def launch_app2():
-    print("Launching App 2")
+    webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")
 
 imported_app_filepath_variable = StringVar()
 # Tracks the path of the icon extracted from the selected .exe
@@ -140,32 +141,90 @@ def import_app_file():
         print("File selected:", imported_file_path)
         imported_app_filepath_variable.set(imported_file_path)
         
-        # Automatically extract the icon and save it temporarily in Assets
+        # Create a unique icon filename using current timestamp so icons don't clash
         assets_dir = Path(__file__).parent / "Assets"
         assets_dir.mkdir(exist_ok=True)
-        temp_icon_path = assets_dir / "temp_extracted_icon.png"
+        unique_icon_name = f"icon_{int(time.time())}.png"
+        temp_icon_path = assets_dir / unique_icon_name
         
         success = extract_exe_icon(imported_file_path, temp_icon_path)
         if success:
             extracted_icon_path_variable.set(str(temp_icon_path))
-            print("Successfully extracted .exe icon!")
+            print("Successfully extracted .exe icon to:", temp_icon_path)
         else:
             print("Could not extract icon, using default.")
             extracted_icon_path_variable.set(str(photo4_image_path))
 
-# App Data List (Inventory)
-apps_inventory = [
-    {
-        "path": myLogo, 
-        "desc": "My Etsy Shop, check it out!",
-        "action": launch_etsy
-    },
-    {
-        "path": photo4_image_path,
-        "desc": "App 2!",
-        "action": launch_app2
-    }
-]
+CONFIG_FILE = Path(__file__).parent / "apps_config.json"
+
+def save_apps():
+    data_to_save = []
+    for app in apps_inventory:
+        img_path = app["path"]
+        if img_path == myLogo:
+            img_str = str(Path(__file__).parent / "Assets" / "photo3.png")
+        else:
+            img_str = str(img_path)
+
+        data_to_save.append({
+            "path": img_str,
+            "desc": app["desc"],
+            "target": app["target"],
+            "type": app["type"]
+        })
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(data_to_save, f, indent=4)
+
+def load_apps():
+    default_apps = [
+        {
+            "path": myLogo,
+            "desc": "My Etsy Shop. Check it out!",
+            "action": launch_etsy,
+            "target": "https://theprintedcraftuk.etsy.com",
+            "type": "url"
+        },
+        {
+            "path": photo4_image_path,
+            "desc": "App 2!",
+            "action": launch_app2,
+            "target": "",
+            "type": "print"
+        }
+    ]
+
+    if not CONFIG_FILE.exists():
+        return default_apps
+
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            saved_data = json.load(f)
+
+        loaded_inventory = []
+        for item in saved_data:
+            target = item["target"]
+            app_type = item["type"]
+
+            if app_type == "url":
+                act = lambda u=target: webbrowser.open_new(u)
+            elif app_type == "exe":
+                act = lambda path=target: os.startfile(path)
+            else:
+                act = launch_app2
+
+            loaded_inventory.append({
+                "path": Path(item["path"]),
+                "desc": item["desc"],
+                "action": act,
+                "target": target,
+                "type": app_type
+            })
+        return loaded_inventory
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        return default_apps
+
+apps_inventory = load_apps()
 
 def refresh_app_grid():
     for index, app_data in enumerate(apps_inventory):
@@ -297,12 +356,18 @@ def openNewAppWindow():
             except Exception as e:
                 print(f"Error launching app: {e}")
 
-        # Append to inventory using the dynamically extracted .exe icon path
-        apps_inventory.append({
-            "path": icon_path,
+        # Append new app to inventory with persistent metadata
+        new_app_data = {
+            "path": Path(icon_path),
             "desc": desc,
-            "action": run_user_app
-        })
+            "action": run_user_app,
+            "target": filepath,
+            "type": "exe"
+        }
+        apps_inventory.append(new_app_data)
+        
+        # Save updated inventory to disk immediately
+        save_apps()
         
         # Calculate row and column indices for 2-per-row layout dynamically
         new_index = len(apps_inventory) - 1
@@ -311,7 +376,7 @@ def openNewAppWindow():
 
         card = AppCard(
             parent_window=root,
-            image_path=icon_path,
+            image_path=Path(icon_path),
             description_text=desc,
             launch_command=run_user_app
         )
