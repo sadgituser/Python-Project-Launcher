@@ -23,7 +23,7 @@ root.configure(bg="#000000", takefocus=True)
 root.columnconfigure(0, weight=1)
 root.columnconfigure(1, weight=1)
 
-#Initialise fonts
+#Initialise root window fonts
 titleFont = font.Font(family="IBM Plex Mono", size=30, underline=True, weight="bold")
 descriptionFont = font.Font(family="IBM Plex Mono", size=12, weight="normal")
 
@@ -55,7 +55,7 @@ photo4_image_path = Path(__file__).parent / "Assets" / "photo4.png"
 
 #What do launch buttons do?
 def launch_etsy():
-    print("Launching Etsy Website!")
+    webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
 def launch_app2():
     print("Launching App 2")
@@ -87,19 +87,10 @@ for index, app_data in enumerate(apps_inventory):
     # Add it dynamically to the window
     card.place_card(row_num=2, col_num=index)
 
-#Initialising menubar
-menubar = tk.Menu(root)
-
-#Add 'File' menu to the menubar - placeholder
-fileMenu = tk.Menu(menubar, tearoff=0)
-menubar.add_cascade(label="File", menu=fileMenu)
-fileMenu.add_command(label="Add New Switch", command=None)
-fileMenu.add_separator()
-fileMenu.add_command(label="Remove Switches", command=None)
-
-#Smaller fonts for 'About Me' window
-aboutMeTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold", underline=True)
-aboutMeDescriptionFont = font.Font(family="IBM Plex Mono", size=14)
+#Smaller fonts for small windows
+smallWindowTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold", underline=True)
+smallWindowDescriptionFont = font.Font(family="IBM Plex Mono", size=14)
+smallWindowButtonFont = font.Font(family="IBM Plex Mono", size=10, underline=True, weight="bold")
 
 
 #Initialise 'About Me' window (function)
@@ -116,14 +107,14 @@ def openAboutMeWindow():
     #About Me Title
     aboutMeTitleLabel = tk.Label(aboutMeWindow,
         text="About Me!",
-        font=aboutMeTitleFont,
+        font=smallWindowTitleFont,
         bg="#000000",
         fg="#00FF00",
         width=10
     )
     aboutMeTitleLabel.grid(row=0, column=0, pady=5)
 
-    #About Me Title
+    #About Me Description
     aboutMeDescriptionLabel = tk.Label(aboutMeWindow,
         text="A little about myself. I am a 15 year old making small projects for fun. " \
         "This project was for the Terra Hackclub (https://terra.hackclub.com) project! " \
@@ -131,7 +122,7 @@ def openAboutMeWindow():
         "My GitHub is at (https://github.com/sadgituser) where you can find many more of my projects! " \
         "Currently there is nowhere that you can support my work, but you can check out my Etsy shop at (https://theprintedcraftuk.etsy.com)! " \
         "Enjoy the app switcher, I hope that you find use in it! ",
-        font=aboutMeDescriptionFont,
+        font=smallWindowDescriptionFont,
         bg="#000000",
         fg="#00FF00",
         width=16,
@@ -146,10 +137,66 @@ def openAboutMeWindow():
     myLogo_descriptionLabel.bind("<Button-1>", openEtsyURL)
 
 
-#Add 'About Me' menu to menubar - placeholder
+
+#Initialise 'Add New App' window (function)
+def openNewAppWindow():
+    #Start and configure 'New App' window
+    newAppWindow = tk.Toplevel(root)
+    newAppWindow.title("Add New App")
+    newAppWindow.geometry("650x375+50+50")
+    newAppWindow.resizable(False, False)
+    newAppWindow.transient(root)
+    newAppWindow.columnconfigure(0, weight=1)
+    newAppWindow.configure(bg="#000000", takefocus=True)
+    
+    #New App Title
+    newAppTitleLabel = tk.Label(newAppWindow,
+        text="Add A New App",
+        font=smallWindowTitleFont,
+        bg="#000000",
+        fg="#00FF00",
+        width=15
+    )
+    newAppTitleLabel.grid(row=0, column=0, pady=7)
+
+    #New App Description - Prototype
+    newAppDescriptionLabel = tk.Label(newAppWindow,
+        text="Here you can add new apps to the switcher! Fill out the fields to get started! (Currently a prototype!)",
+        font=smallWindowDescriptionFont,
+        bg="#000000",
+        fg="#00FF00",
+        width=16,
+        wraplength=625,
+        justify="left"
+    )
+    newAppDescriptionLabel.grid(row=1, pady=8, sticky="EW")
+
+    #Create New App Button - Still prototyping!
+    createNewAppButton = tk.Button(newAppWindow,
+        text="CREATE APP!",
+        font=smallWindowButtonFont,
+        bg="#00FF00",
+        fg="#000000",
+        command=None
+    )
+    createNewAppButton.grid(row=2, pady=9)
+
+
+
+#Initialising the menubar
+menubar = tk.Menu(root)
+
+#Add 'File' menu to the menubar - placeholder
+fileMenu = tk.Menu(menubar, tearoff=0)
+menubar.add_cascade(label="File", menu=fileMenu)
+fileMenu.add_command(label="Add New Switch/App", command=openNewAppWindow)
+fileMenu.add_separator()
+fileMenu.add_command(label="Remove Switches/Apps", command=None)
+
+#Add 'About Me' menu to menubar
 aboutMeMenu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label="About Me", menu=aboutMeMenu)
-aboutMeMenu.add_command(label="More About Me (Popup Window)", command=openAboutMeWindow)
+aboutMeMenu.add_command(label="About Me (Popup Window)", command=openAboutMeWindow)
 
 
 root.config(menu=menubar)

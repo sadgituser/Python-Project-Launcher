@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import font
 from PIL import Image, ImageTk
 from pathlib import Path
 
@@ -33,7 +34,9 @@ class AppCard:
         self.desc_label = tk.Label(self.frame, text=description_text, fg="#00FF00", bg="#000000", wraplength=150)
         self.desc_label.grid(row=1, column=0, pady=5)
 
-        self.button = tk.Button(self.frame, text="Launch App!", command=launch_command, bg="#00FF00", fg="#000000")
+        smallWindowButtonFont = font.Font(family="IBM Plex Mono", size=10, underline=True, weight="bold")
+
+        self.button = tk.Button(self.frame, text="LAUNCH APP!", command=launch_command, bg="#00FF00", fg="#000000", font=smallWindowButtonFont)
         self.button.grid(row=2, column=0, pady=5)
 
     def place_card(self, row_num, col_num):
