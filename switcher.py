@@ -35,7 +35,7 @@ titleLabel = tk.Label(root,
     fg="#00FF00",
     width="20"
 )
-titleLabel.grid(row=0, column=0, pady=(10, 10)) # Row 0, centered, added vertical padding
+titleLabel.grid(row=0, column=0, columnspan=2, pady=(10, 10)) # Row 0, centered, added vertical padding
 
 #Description label of program
 descriptionLabel = tk.Label(root,
@@ -44,7 +44,7 @@ descriptionLabel = tk.Label(root,
     bg="#000000",
     fg="#00FF00"
 )
-descriptionLabel.grid(row=1, column=0, pady=10) # Row 1, centered
+descriptionLabel.grid(row=1, column=0, columnspan=2, pady=10) # Row 1, centered
 
 #Image Paths and Image Initialisation
 photo1_image_path = Path(__file__).parent / "Assets" / "photo1.png"
@@ -60,7 +60,7 @@ def launch_etsy():
 def launch_app2():
     print("Launching App 2")
 
-#App Data List (Inventory)
+# App Data List (Inventory)
 apps_inventory = [
     {
         "path": Path(__file__).parent / "Assets" / "photo3.png",
@@ -74,17 +74,17 @@ apps_inventory = [
     }
 ]
 
-#Build the grid
+# Build the grid
 for index, app_data in enumerate(apps_inventory):
-    #Create card instance using the class
+    # Create card instance using the class
     card = AppCard(
         parent_window=root,
         image_path=app_data["path"],
         description_text=app_data["desc"],
-        launch_command=["action"]
+        launch_command=app_data["action"]
     )
 
-    #Add it dynamically to the window
+    # Add it dynamically to the window
     card.place_card(row_num=2, col_num=index)
 
 #Initialising menubar

@@ -1,31 +1,38 @@
 import tkinter as tk
 from PIL import Image, ImageTk
+from pathlib import Path
 
 class AppCard:
     def __init__ (self, parent_window, image_path, description_text, launch_command):
         
-        #Local Frame Container
+        # Local Frame Container
         self.frame = tk.Frame(parent_window, bg="#000000")
 
-        #Process the image
-        raw_image = Image.open(image_path)
-        resized_image = raw_image.resize((100, 100))
+        img_path = Path(image_path)
+        raw_image = Image.open(img_path)
 
-        #Convert white colours to transparent
-        resized_image = resized_image.convert("RGBA")
-        pixels = resized_image.getdata()
-        new_pixels = []
-        for pixel in pixels:
-            if pixel[0] > 240 and pixel[1] > 240 and pixel[2] > 240:
-                new_pixels.append((0, 0, 0, 0))
-            else:
-                new_pixels.append(pixel)
-        resized_image.putdata(new_pixels)
+        # Check if it's photo3.png (Etsy shop logo)
+        if img_path.name == "photo3.png":
+            # Convert to RGB to ensure solid background and border, then resize to 100x100
+            resized_image = raw_image.convert("RGB").resize((100, 100))
+            final_image = resized_image
+        else:
+            # Resize and apply white-to-transparent loop for other icons (like photo4.png)
+            resized_image = raw_image.resize((100, 100)).convert("RGBA")
+            pixels = resized_image.getdata()
+            new_pixels = []
+            for pixel in pixels:
+                if pixel[0] > 240 and pixel[1] > 240 and pixel[2] > 240:
+                    new_pixels.append((0, 0, 0, 0))
+                else:
+                    new_pixels.append(pixel)
+            resized_image.putdata(new_pixels)
+            final_image = resized_image
 
-        #Save reference
-        self.tk_image = ImageTk.PhotoImage(resized_image)
+        # Save reference
+        self.tk_image = ImageTk.PhotoImage(final_image)
 
-        #Create widgets in frame
+        # Create widgets in frame
         self.logo_label = tk.Label(self.frame, image=self.tk_image, bg="#000000")
         self.logo_label.grid(row=0, column=0, pady=5)
 
@@ -36,5 +43,5 @@ class AppCard:
         self.button.grid(row=2, column=0, pady=5)
 
     def place_card(self, row_num, col_num):
-        #Put container on main grid
+        # Put container on main grid
         self.frame.grid(row=row_num, column=col_num, padx=20, pady=10)
