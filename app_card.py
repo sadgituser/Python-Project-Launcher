@@ -8,16 +8,13 @@ class AppCard:
         # Local Frame Container
         self.frame = tk.Frame(parent_window, bg="#000000")
 
-        img_path = Path(image_path)
-        raw_image = Image.open(img_path)
-
-        # Check if it's photo3.png (Etsy shop logo)
-        if img_path.name == "photo3.png":
-            # Convert to RGB to ensure solid background and border, then resize to 100x100
-            resized_image = raw_image.convert("RGB").resize((100, 100))
-            final_image = resized_image
+        # Check FIRST if image_path is already a tk.PhotoImage object (like myLogo)
+        if isinstance(image_path, tk.PhotoImage):
+            self.tk_image = image_path
         else:
-            # Resize and apply white-to-transparent loop for other icons (like photo4.png)
+            # Otherwise, process file paths normally with PIL
+            img_path = Path(image_path)
+            raw_image = Image.open(img_path)
             resized_image = raw_image.resize((100, 100)).convert("RGBA")
             pixels = resized_image.getdata()
             new_pixels = []
@@ -27,10 +24,7 @@ class AppCard:
                 else:
                     new_pixels.append(pixel)
             resized_image.putdata(new_pixels)
-            final_image = resized_image
-
-        # Save reference
-        self.tk_image = ImageTk.PhotoImage(final_image)
+            self.tk_image = ImageTk.PhotoImage(resized_image)
 
         # Create widgets in frame
         self.logo_label = tk.Label(self.frame, image=self.tk_image, bg="#000000")

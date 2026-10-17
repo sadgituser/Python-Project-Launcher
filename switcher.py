@@ -63,7 +63,7 @@ def launch_app2():
 # App Data List (Inventory)
 apps_inventory = [
     {
-        "path": Path(__file__).parent / "Assets" / "photo3.png",
+        "path": myLogo, 
         "desc": "My Etsy Shop, check it out!",
         "action": launch_etsy
     },
