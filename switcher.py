@@ -2,9 +2,13 @@
 #Imports
 import tkinter as tk
 from tkinter.ttk import *
-from tkinter import font
+from tkinter import *
+from tkinter import font, filedialog
 from pathlib import Path
 import webbrowser
+import os
+import ctypes
+from ctypes import wintypes
 from PIL import Image, ImageTk
 from app_card import AppCard
 
@@ -12,14 +16,14 @@ from app_card import AppCard
 def openEtsyURL(event):
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
-
 #Initialise root window
 root = tk.Tk()
 root.title("Python App Switcher")
 root.geometry("800x600+150+150")
 root.resizable(False, False)
 root.configure(bg="#000000", takefocus=True)
-# Configure the root grid to center content horizontally, add more of these for newly added apps
+
+# Configure the 2 columns to center content horizontally
 root.columnconfigure(0, weight=1)
 root.columnconfigure(1, weight=1)
 
@@ -35,7 +39,7 @@ titleLabel = tk.Label(root,
     fg="#00FF00",
     width="20"
 )
-titleLabel.grid(row=0, column=0, columnspan=2, pady=(10, 10)) # Row 0, centered, added vertical padding
+titleLabel.grid(row=0, column=0, columnspan=2, pady=(10, 10))
 
 #Description label of program
 descriptionLabel = tk.Label(root,
@@ -44,7 +48,7 @@ descriptionLabel = tk.Label(root,
     bg="#000000",
     fg="#00FF00"
 )
-descriptionLabel.grid(row=1, column=0, columnspan=2, pady=10) # Row 1, centered
+descriptionLabel.grid(row=1, column=0, columnspan=2, pady=10)
 
 #Image Paths and Image Initialisation
 photo1_image_path = Path(__file__).parent / "Assets" / "photo1.png"
@@ -60,6 +64,95 @@ def launch_etsy():
 def launch_app2():
     print("Launching App 2")
 
+imported_app_filepath_variable = StringVar()
+# Tracks the path of the icon extracted from the selected .exe
+extracted_icon_path_variable = StringVar(value=str(photo4_image_path))
+
+# Helper function to extract an icon directly from a Windows .exe resource using ExtractIconExW
+def extract_exe_icon(exe_path, save_path):
+    shell32 = ctypes.windll.shell32
+    user32 = ctypes.windll.user32
+    gdi32 = ctypes.windll.gdi32
+    
+    hIconLarge = wintypes.HICON()
+    hIconSmall = wintypes.HICON()
+    
+    # ExtractIconExW extracts icons directly from the executable file resources
+    res = shell32.ExtractIconExW(str(exe_path), 0, ctypes.byref(hIconLarge), ctypes.byref(hIconSmall), 1)
+    
+    # Pick whichever icon handle was successfully extracted
+    hIcon = hIconLarge.value if hIconLarge.value else hIconSmall.value
+    if not res or not hIcon:
+        return False
+        
+    # Create compatible device context and bitmap to render the icon
+    hdc = user32.GetDC(None)
+    hdcmem = gdi32.CreateCompatibleDC(hdc)
+    hbm = gdi32.CreateCompatibleBitmap(hdc, 32, 32)
+    gdi32.SelectObject(hdcmem, hbm)
+    
+    user32.DrawIconEx(hdcmem, 0, 0, hIcon, 32, 32, 0, None, 0x0003) # DI_NORMAL
+    
+    class BITMAPINFOHEADER(ctypes.Structure):
+        _fields_ = [
+            ("biSize", wintypes.DWORD),
+            ("biWidth", wintypes.LONG),
+            ("biHeight", wintypes.LONG),
+            ("biPlanes", wintypes.WORD),
+            ("biBitcount", wintypes.WORD),
+            ("biCompression", wintypes.DWORD),
+            ("biSizeImage", wintypes.DWORD),
+            ("biPelsPerMeter", wintypes.LONG),
+            ("biPelsPerMeterY", wintypes.LONG),
+            ("biClrUsed", wintypes.DWORD),
+            ("biClrImportant", wintypes.DWORD)
+        ]
+        
+    bmi = BITMAPINFOHEADER()
+    bmi.biSize = ctypes.sizeof(BITMAPINFOHEADER)
+    bmi.biWidth = 32
+    bmi.biHeight = -32  # Top-down
+    bmi.biPlanes = 1
+    bmi.biBitcount = 32
+    bmi.biCompression = 0
+    
+    buf = ctypes.create_string_buffer(32 * 32 * 4)
+    gdi32.GetDIBits(hdcmem, hbm, 0, 32, buf, ctypes.byref(bmi), 0)
+    
+    user32.ReleaseDC(None, hdc)
+    gdi32.DeleteObject(hbm)
+    gdi32.DeleteDC(hdcmem)
+    
+    # Clean up icon handles
+    if hIconLarge.value:
+        user32.DestroyIcon(hIconLarge.value)
+    if hIconSmall.value:
+        user32.DestroyIcon(hIconSmall.value)
+    
+    # Convert buffer to PIL Image and save as PNG
+    img = Image.frombuffer("RGBA", (32, 32), buf, "raw", "BGRA", 0, 1)
+    img.save(save_path, "PNG")
+    return True
+
+def import_app_file():
+    imported_file_path = filedialog.askopenfilename(title="Select a File for the App!", filetypes=[("Windows Executable Files", "*.exe")])
+    if imported_file_path:
+        print("File selected:", imported_file_path)
+        imported_app_filepath_variable.set(imported_file_path)
+        
+        # Automatically extract the icon and save it temporarily in Assets
+        assets_dir = Path(__file__).parent / "Assets"
+        assets_dir.mkdir(exist_ok=True)
+        temp_icon_path = assets_dir / "temp_extracted_icon.png"
+        
+        success = extract_exe_icon(imported_file_path, temp_icon_path)
+        if success:
+            extracted_icon_path_variable.set(str(temp_icon_path))
+            print("Successfully extracted .exe icon!")
+        else:
+            print("Could not extract icon, using default.")
+            extracted_icon_path_variable.set(str(photo4_image_path))
+
 # App Data List (Inventory)
 apps_inventory = [
     {
@@ -68,35 +161,36 @@ apps_inventory = [
         "action": launch_etsy
     },
     {
-        "path": Path(__file__).parent / "Assets" / "photo4.png",
+        "path": photo4_image_path,
         "desc": "App 2!",
         "action": launch_app2
     }
 ]
 
-# Build the grid
-for index, app_data in enumerate(apps_inventory):
-    # Create card instance using the class
-    card = AppCard(
-        parent_window=root,
-        image_path=app_data["path"],
-        description_text=app_data["desc"],
-        launch_command=app_data["action"]
-    )
+def refresh_app_grid():
+    for index, app_data in enumerate(apps_inventory):
+        row_num = 2 + (index // 2)
+        col_num = index % 2
+        card = AppCard(
+            parent_window=root,
+            image_path=app_data["path"],
+            description_text=app_data["desc"],
+            launch_command=app_data["action"]
+        )
+        card.place_card(row_num=row_num, col_num=col_num)
 
-    # Add it dynamically to the window
-    card.place_card(row_num=2, col_num=index)
+# Build the initial grid
+refresh_app_grid()
 
 #Smaller fonts for small windows
 smallWindowTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold", underline=True)
 smallWindowDescriptionFont = font.Font(family="IBM Plex Mono", size=14)
 smallWindowButtonFont = font.Font(family="IBM Plex Mono", size=10, underline=True, weight="bold")
-
+smallWindowEntryFont = font.Font(family="IBM Plex Mono", size=12)
 
 #Initialise 'About Me' window (function)
 def openAboutMeWindow():
-    #Start and configure 'About Me' window
-    aboutMeWindow = tk.Toplevel(root)
+    aboutMeWindow = Toplevel(root)
     aboutMeWindow.title("About Me")
     aboutMeWindow.geometry("650x375+50+50")
     aboutMeWindow.resizable(False, False)
@@ -104,8 +198,7 @@ def openAboutMeWindow():
     aboutMeWindow.columnconfigure(0, weight=1)
     aboutMeWindow.configure(bg="#000000", takefocus=True)
     
-    #About Me Title
-    aboutMeTitleLabel = tk.Label(aboutMeWindow,
+    aboutMeTitleLabel = Label(aboutMeWindow,
         text="About Me!",
         font=smallWindowTitleFont,
         bg="#000000",
@@ -114,8 +207,7 @@ def openAboutMeWindow():
     )
     aboutMeTitleLabel.grid(row=0, column=0, pady=5)
 
-    #About Me Description
-    aboutMeDescriptionLabel = tk.Label(aboutMeWindow,
+    aboutMeDescriptionLabel = Label(aboutMeWindow,
         text="A little about myself. I am a 15 year old making small projects for fun. " \
         "This project was for the Terra Hackclub (https://terra.hackclub.com) project! " \
         "It is honestly quite fun, and I really enjoy making cool fun things for little fun projects like these. " \
@@ -131,17 +223,19 @@ def openAboutMeWindow():
     )
     aboutMeDescriptionLabel.grid(row=1, pady=7, sticky="EW")
 
-    #Etsy Logo
-    myLogo_descriptionLabel = tk.Label(aboutMeWindow, image=myLogo, cursor="hand2")
+    myLogo_descriptionLabel = Label(aboutMeWindow, image=myLogo, cursor="hand2")
     myLogo_descriptionLabel.grid(row=2, column=0, pady=10)
     myLogo_descriptionLabel.bind("<Button-1>", openEtsyURL)
 
-
-
 #Initialise 'Add New App' window (function)
 def openNewAppWindow():
-    #Start and configure 'New App' window
-    newAppWindow = tk.Toplevel(root)
+    global userNewAppEntry
+    global imported_app_filepath_variable
+    global extracted_icon_path_variable
+
+    userNewAppEntry = StringVar()
+
+    newAppWindow = Toplevel(root)
     newAppWindow.title("Add New App")
     newAppWindow.geometry("650x375+50+50")
     newAppWindow.resizable(False, False)
@@ -149,8 +243,7 @@ def openNewAppWindow():
     newAppWindow.columnconfigure(0, weight=1)
     newAppWindow.configure(bg="#000000", takefocus=True)
     
-    #New App Title
-    newAppTitleLabel = tk.Label(newAppWindow,
+    newAppTitleLabel = Label(newAppWindow,
         text="Add A New App",
         font=smallWindowTitleFont,
         bg="#000000",
@@ -159,9 +252,9 @@ def openNewAppWindow():
     )
     newAppTitleLabel.grid(row=0, column=0, pady=7)
 
-    #New App Description - Prototype
-    newAppDescriptionLabel = tk.Label(newAppWindow,
-        text="Here you can add new apps to the switcher! Fill out the fields to get started! (Currently a prototype!)",
+    newAppDescriptionLabel = Label(newAppWindow,
+        text="Here you can add new apps to the switcher! Fill out the fields to get started! " \
+        "Enter the App Description in the white entry field and select the file using Import File!",
         font=smallWindowDescriptionFont,
         bg="#000000",
         fg="#00FF00",
@@ -171,33 +264,82 @@ def openNewAppWindow():
     )
     newAppDescriptionLabel.grid(row=1, pady=8, sticky="EW")
 
-    #Create New App Button - Still prototyping!
-    createNewAppButton = tk.Button(newAppWindow,
+    createNewAppDescriptionTextEntry = Entry(newAppWindow,
+        bg="#FFFFFF",
+        fg="#000000",
+        font=smallWindowEntryFont,
+        justify="left",
+        textvariable=userNewAppEntry
+    )
+    createNewAppDescriptionTextEntry.grid(row=2, pady=9)
+
+    import_file_button = Button(newAppWindow,
+        text="Import File",
+        command=import_app_file,
+        font=smallWindowButtonFont,
+        bg="#00FF00",
+        fg="#000000"
+    )
+    import_file_button.grid(row=3, pady=9)
+
+    def createNewUserApp():
+        desc = userNewAppEntry.get()
+        filepath = imported_app_filepath_variable.get()
+        icon_path = extracted_icon_path_variable.get()
+        
+        if not filepath:
+            print("No file selected!")
+            return
+
+        def run_user_app():
+            try:
+                os.startfile(filepath)
+            except Exception as e:
+                print(f"Error launching app: {e}")
+
+        # Append to inventory using the dynamically extracted .exe icon path
+        apps_inventory.append({
+            "path": icon_path,
+            "desc": desc,
+            "action": run_user_app
+        })
+        
+        # Calculate row and column indices for 2-per-row layout dynamically
+        new_index = len(apps_inventory) - 1
+        row_num = 2 + (new_index // 2)
+        col_num = new_index % 2
+
+        card = AppCard(
+            parent_window=root,
+            image_path=icon_path,
+            description_text=desc,
+            launch_command=run_user_app
+        )
+        card.place_card(row_num=row_num, col_num=col_num)
+        
+        newAppWindow.destroy()
+
+    createNewAppButton = Button(newAppWindow,
         text="CREATE APP!",
         font=smallWindowButtonFont,
         bg="#00FF00",
         fg="#000000",
-        command=None
+        command=createNewUserApp
     )
-    createNewAppButton.grid(row=2, pady=9)
-
-
+    createNewAppButton.grid(row=4, pady=9)
 
 #Initialising the menubar
-menubar = tk.Menu(root)
+menubar = Menu(root)
 
-#Add 'File' menu to the menubar - placeholder
-fileMenu = tk.Menu(menubar, tearoff=0)
+fileMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="File", menu=fileMenu)
 fileMenu.add_command(label="Add New Switch/App", command=openNewAppWindow)
 fileMenu.add_separator()
 fileMenu.add_command(label="Remove Switches/Apps", command=None)
 
-#Add 'About Me' menu to menubar
-aboutMeMenu = tk.Menu(menubar, tearoff=0)
+aboutMeMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="About Me", menu=aboutMeMenu)
 aboutMeMenu.add_command(label="About Me (Popup Window)", command=openAboutMeWindow)
-
 
 root.config(menu=menubar)
 root.mainloop()
