@@ -3,3 +3,5 @@ __pycache__
 /Assets/temp_extracted_icon.png
 /Assets/icon_*.png
 apps_config.json
+build/
+dist/

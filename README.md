@@ -7,8 +7,9 @@ It's fairly simple, just go to 'Switch/App Settings' and 'Add a Switch/App' or '
 It's very customisable, with over 50 buttons all with different colours to choose from!
 It is designed to be easy to use and a quick tool for launching apps or websites that you use often.
 There are many possibilities of app and website launchers that you can pick, but this is the best one.
+It also includes features like a live Statistics Board and a random theme generator. Even a little easter egg if you feel adventurous :)
 
-You can download the app as an executable file on the Releases page (currently still working on that...)
+You can download the app as an executable file on the Releases page, or if you are feeling spicy then you can try and use the Python file!
 
 
 Check out my other project [here](https://github.com/sadgituser/python-random-password-generator) or my [Etsy Shop](https://theprintedcraftuk.etsy.com)!

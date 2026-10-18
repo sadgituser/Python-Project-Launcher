@@ -13,6 +13,17 @@ import ctypes
 from ctypes import wintypes
 from PIL import Image, ImageTk
 from app_card import AppCard
+import sys
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return Path(base_path) / relative_path
 
 #Open Etsy URL (for image)
 def openEtsyURL(event):
@@ -60,12 +71,12 @@ descriptionLabel = tk.Label(root,
 descriptionLabel.grid(row=1, column=0, columnspan=2, pady=10)
 
 #Image Paths and Image Initialisation
-photo1_image_path = Path(__file__).parent / "Assets" / "photo1.png"
+photo1_image_path = resource_path("Assets/photo1.png")
 hackClubLogo = tk.PhotoImage(file=photo1_image_path)
-photo3_image_path = Path(__file__).parent / "Assets" / "photo3.png"
+photo3_image_path = resource_path("Assets/photo3.png")
 myLogo = tk.PhotoImage(file=photo3_image_path)
-photo4_image_path = Path(__file__).parent / "Assets" / "photo4.png"
-photo5_image_path = Path(__file__).parent / "Assets" / "photo5.png"
+photo4_image_path = resource_path("Assets/photo4.png")
+photo5_image_path = resource_path("Assets/photo5.png")
 mainIcon = tk.PhotoImage(file=photo5_image_path)
 
 root.iconphoto(True, mainIcon)
