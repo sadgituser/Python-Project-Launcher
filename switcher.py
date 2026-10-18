@@ -551,8 +551,8 @@ def openNewAppWindow():
 
 def openCustomiseWindow():
     customiseWindow = Toplevel(root)
-    customiseWindow.title("Customise")
-    customiseWindow.geometry("650x375+50+50")
+    customiseWindow.title("Customise Colours")
+    customiseWindow.geometry("700x650+50+50")
     customiseWindow.resizable(False, False)
     customiseWindow.transient(root)
     customiseWindow.columnconfigure(0, weight=1)
@@ -586,26 +586,171 @@ def openCustomiseWindow():
         save_apps()
         customiseWindow.destroy()
 
+    #Buttons
     matrix_btn = Button(themes_frame, text="Matrix Green", command=lambda: set_theme("#000000", "#00FF00"), bg="#00FF00", fg="#000000", font=smallWindowButtonFont)
     matrix_btn.grid(row=0, column=0, padx=8)
     
     cyber_btn = Button(themes_frame, text="Cyberpunk Pink", command=lambda: set_theme("#000000", "#FF00FF"), bg="#FF00FF", fg="#000000", font=smallWindowButtonFont)
-    cyber_btn.grid(row=0, column=1, padx=8)
+    cyber_btn.grid(row=0, column=1, padx=8, pady=10)
     
     amber_btn = Button(themes_frame, text="Retro Amber", command=lambda: set_theme("#000000", "#FFB000"), bg="#FFB000", fg="#000000", font=smallWindowButtonFont)
-    amber_btn.grid(row=0, column=2, padx=8)
+    amber_btn.grid(row=0, column=2, padx=8, pady=10)
 
     ice_btn = Button(themes_frame, text="Ice Blue", command=lambda: set_theme("#000000", "#00D2FF"), bg="#00D2FF", fg="#000000", font=smallWindowButtonFont)
-    ice_btn.grid(row=0, column=3, padx=8)
+    ice_btn.grid(row=0, column=3, padx=8, pady=10)
 
     grey_btn = Button(themes_frame, text="Sad Grey", command=lambda: set_theme("#000000", "#89827C"), bg="#89827C", fg="#000000", font=smallWindowButtonFont)
-    grey_btn.grid(row=0, column=4, padx=8)
+    grey_btn.grid(row=0, column=4, padx=8, pady=10)
 
     anger_btn = Button(themes_frame, text="Angry Red", command=lambda: set_theme("#000000", "#FF0000"), bg="#FF0000", fg="#000000", font=smallWindowButtonFont)
     anger_btn.grid(row=1, column=0, padx=8, pady=10)
 
     contemplative_blue_btn = Button(themes_frame, text="Contemplative Blue", command=lambda: set_theme("#000000", "#0B3F83"), bg="#0B3F83", fg="#000000", font=smallWindowButtonFont)
     contemplative_blue_btn.grid(row=1, column=1, padx=8, pady=10)
+
+    chill_btn = Button(themes_frame, text="Chill Lilac", command=lambda: set_theme("#000000", "#A47DAB"), bg="#A47DAB", fg="#000000", font=smallWindowButtonFont)
+    chill_btn.grid(row=1, column=2, padx=8, pady=10)
+
+    vivid_btn = Button(themes_frame, text="Vivid Yellow", command=lambda: set_theme("#000000", "#FFFF00"), bg="#FFFF00", fg="#000000", font=smallWindowButtonFont)
+    vivid_btn.grid(row=1, column=3, padx=8, pady=10)
+
+    moss_btn = Button(themes_frame, text="Moss", command=lambda: set_theme("#000000", "#636B2F"), bg="#636B2F", fg="#000000", font=smallWindowButtonFont)
+    moss_btn.grid(row=1, column=4, padx=8, pady=10)
+
+    eclipse_btn = Button(themes_frame, text="Eclipse Blue", command=lambda: set_theme("#000000", "#272757"), bg="#272757", fg="#000000", font=smallWindowButtonFont)
+    eclipse_btn.grid(row=2, column=0, padx=8, pady=10)
+
+    forest_btn = Button(themes_frame, text="Lush Forest Green", command=lambda: set_theme("#000000", "#2E6F40"), bg="#2E6F40", fg="#000000", font=smallWindowButtonFont)
+    forest_btn.grid(row=2, column=1, padx=8, pady=10)
+
+    spice_btn = Button(themes_frame, text="Spiced Red", command=lambda: set_theme("#000000", "#9B1313"), bg="#9B1313", fg="#000000", font=smallWindowButtonFont)
+    spice_btn.grid(row=2, column=2, padx=8, pady=10)
+
+    chocolate_btn = Button(themes_frame, text="Lush Forest Green", command=lambda: set_theme("#000000", "#38240D"), bg="#38240D", fg="#000000", font=smallWindowButtonFont)
+    chocolate_btn.grid(row=2, column=3, padx=8, pady=10)
+
+    ink_btn = Button(themes_frame, text="Seaside Blue", command=lambda: set_theme("#000000", "#6D8196"), bg="#6D8196", fg="#000000", font=smallWindowButtonFont)
+    ink_btn.grid(row=2, column=4, padx=8, pady=10)
+
+    gold_btn = Button(themes_frame, text="Metallic Gold", command=lambda: set_theme("#000000", "#D4AF37"), bg="#D4AF37", fg="#000000", font=smallWindowButtonFont)
+    gold_btn.grid(row=3, column=0, padx=8, pady=10)
+
+    silver_btn = Button(themes_frame, text="Sterling Silver", command=lambda: set_theme("#000000", "#C0C0C0"), bg="#C0C0C0", fg="#000000", font=smallWindowButtonFont)
+    silver_btn.grid(row=3, column=1, padx=8, pady=10)
+
+    lavender_btn = Button(themes_frame, text="Lavender Dream", command=lambda: set_theme("#000000", "#9B59B6"), bg="#9B59B6", fg="#000000", font=smallWindowButtonFont)
+    lavender_btn.grid(row=3, column=2, padx=8, pady=10)
+
+    coral_btn = Button(themes_frame, text="Sunset Coral", command=lambda: set_theme("#000000", "#FF6B6B"), bg="#FF6B6B", fg="#000000", font=smallWindowButtonFont)
+    coral_btn.grid(row=3, column=3, padx=8, pady=10)
+
+    turquoise_btn = Button(themes_frame, text="Bright Turquoise", command=lambda: set_theme("#000000", "#1ABC9C"), bg="#1ABC9C", fg="#000000", font=smallWindowButtonFont)
+    turquoise_btn.grid(row=3, column=4, padx=8, pady=10)
+
+    sunset_btn = Button(themes_frame, text="Sunset Orange", command=lambda: set_theme("#000000", "#E67E22"), bg="#E67E22", fg="#000000", font=smallWindowButtonFont)
+    sunset_btn.grid(row=4, column=0, padx=8, pady=10)
+
+    neon_purple_btn = Button(themes_frame, text="Neon Purple", command=lambda: set_theme("#000000", "#BD00FF"), bg="#BD00FF", fg="#000000", font=smallWindowButtonFont)
+    neon_purple_btn.grid(row=4, column=1, padx=8, pady=10)
+
+    royal_blue_btn = Button(themes_frame, text="Royal Blue", command=lambda: set_theme("#000000", "#3498DB"), bg="#3498DB", fg="#000000", font=smallWindowButtonFont)
+    royal_blue_btn.grid(row=4, column=2, padx=8, pady=10)
+
+    rose_btn = Button(themes_frame, text="Rose Pink", command=lambda: set_theme("#000000", "#FF69B4"), bg="#FF69B4", fg="#000000", font=smallWindowButtonFont)
+    rose_btn.grid(row=4, column=3, padx=8, pady=10)
+
+    yellow_btn = Button(themes_frame, text="Electric Yellow", command=lambda: set_theme("#000000", "#F1C40F"), bg="#F1C40F", fg="#000000", font=smallWindowButtonFont)
+    yellow_btn.grid(row=4, column=4, padx=8, pady=10)
+
+    teal_btn = Button(themes_frame, text="Deep Teal", command=lambda: set_theme("#000000", "#008080"), bg="#008080", fg="#000000", font=smallWindowButtonFont)
+    teal_btn.grid(row=5, column=0, padx=8, pady=10)
+
+    plum_btn = Button(themes_frame, text="Rich Plum", command=lambda: set_theme("#000000", "#8E44AD"), bg="#8E44AD", fg="#000000", font=smallWindowButtonFont)
+    plum_btn.grid(row=5, column=1, padx=8, pady=10)
+
+    brick_btn = Button(themes_frame, text="Brick Red", command=lambda: set_theme("#000000", "#C0392B"), bg="#C0392B", fg="#000000", font=smallWindowButtonFont)
+    brick_btn.grid(row=5, column=2, padx=8, pady=10)
+
+    slate_btn = Button(themes_frame, text="Slate Blue", command=lambda: set_theme("#000000", "#5D6D7E"), bg="#5D6D7E", fg="#000000", font=smallWindowButtonFont)
+    slate_btn.grid(row=5, column=3, padx=8, pady=10)
+
+    peach_btn = Button(themes_frame, text="Warm Peach", command=lambda: set_theme("#000000", "#FFAB91"), bg="#FFAB91", fg="#000000", font=smallWindowButtonFont)
+    peach_btn.grid(row=5, column=4, padx=8, pady=10)
+
+    cyan_btn = Button(themes_frame, text="Neon Cyan", command=lambda: set_theme("#000000", "#00FFFF"), bg="#00FFFF", fg="#000000", font=smallWindowButtonFont)
+    cyan_btn.grid(row=6, column=0, padx=8, pady=10)
+
+    magenta_btn = Button(themes_frame, text="Deep Magenta", command=lambda: set_theme("#000000", "#D81B60"), bg="#D81B60", fg="#000000", font=smallWindowButtonFont)
+    magenta_btn.grid(row=6, column=1, padx=8, pady=10)
+
+    bronze_btn = Button(themes_frame, text="Antique Bronze", command=lambda: set_theme("#000000", "#CD7F32"), bg="#CD7F32", fg="#000000", font=smallWindowButtonFont)
+    bronze_btn.grid(row=6, column=2, padx=8, pady=10)
+
+    orchid_btn = Button(themes_frame, text="Light Orchid", command=lambda: set_theme("#000000", "#DA70D6"), bg="#DA70D6", fg="#000000", font=smallWindowButtonFont)
+    orchid_btn.grid(row=6, column=3, padx=8, pady=10)
+
+    periwinkle_btn = Button(themes_frame, text="Soft Periwinkle", command=lambda: set_theme("#000000", "#CCCCFF"), bg="#CCCCFF", fg="#000000", font=smallWindowButtonFont)
+    periwinkle_btn.grid(row=6, column=4, padx=8, pady=10)
+
+    emerald_btn = Button(themes_frame, text="Emerald Green", command=lambda: set_theme("#000000", "#2ECC71"), bg="#2ECC71", fg="#000000", font=smallWindowButtonFont)
+    emerald_btn.grid(row=7, column=0, padx=8, pady=10)
+
+    steel_btn = Button(themes_frame, text="Steel Blue", command=lambda: set_theme("#000000", "#4682B4"), bg="#4682B4", fg="#000000", font=smallWindowButtonFont)
+    steel_btn.grid(row=7, column=1, padx=8, pady=10)
+
+    burnt_orange_btn = Button(themes_frame, text="Burnt Orange", command=lambda: set_theme("#000000", "#CC5500"), bg="#CC5500", fg="#000000", font=smallWindowButtonFont)
+    burnt_orange_btn.grid(row=7, column=2, padx=8, pady=10)
+
+    amethyst_btn = Button(themes_frame, text="Amethyst", command=lambda: set_theme("#000000", "#9966CC"), bg="#9966CC", fg="#000000", font=smallWindowButtonFont)
+    amethyst_btn.grid(row=7, column=3, padx=8, pady=10)
+
+    khaki_btn = Button(themes_frame, text="Khaki Gold", command=lambda: set_theme("#000000", "#F0E68C"), bg="#F0E68C", fg="#000000", font=smallWindowButtonFont)
+    khaki_btn.grid(row=7, column=4, padx=8, pady=10)
+
+    marine_btn = Button(themes_frame, text="Marine Blue", command=lambda: set_theme("#000000", "#000080"), bg="#000080", fg="#000000", font=smallWindowButtonFont)
+    marine_btn.grid(row=8, column=0, padx=8, pady=10)
+
+    crimson_btn = Button(themes_frame, text="Crimson Red", command=lambda: set_theme("#000000", "#DC143C"), bg="#DC143C", fg="#000000", font=smallWindowButtonFont)
+    crimson_btn.grid(row=8, column=1, padx=8, pady=10)
+
+    olive_btn = Button(themes_frame, text="Dark Olive", command=lambda: set_theme("#000000", "#556B2F"), bg="#556B2F", fg="#000000", font=smallWindowButtonFont)
+    olive_btn.grid(row=8, column=2, padx=8, pady=10)
+
+    slate_grey_btn = Button(themes_frame, text="Slate Grey", command=lambda: set_theme("#000000", "#708090"), bg="#708090", fg="#000000", font=smallWindowButtonFont)
+    slate_grey_btn.grid(row=8, column=3, padx=8, pady=10)
+
+    hot_pink_btn = Button(themes_frame, text="Hot Pink", command=lambda: set_theme("#000000", "#FF1493"), bg="#FF1493", fg="#000000", font=smallWindowButtonFont)
+    hot_pink_btn.grid(row=8, column=4, padx=8, pady=10)
+
+    dodger_btn = Button(themes_frame, text="Dodger Blue", command=lambda: set_theme("#000000", "#1E90FF"), bg="#1E90FF", fg="#000000", font=smallWindowButtonFont)
+    dodger_btn.grid(row=9, column=0, padx=8, pady=10)
+
+    dark_orchid_btn = Button(themes_frame, text="Dark Orchid", command=lambda: set_theme("#000000", "#9932CC"), bg="#9932CC", fg="#000000", font=smallWindowButtonFont)
+    dark_orchid_btn.grid(row=9, column=1, padx=8, pady=10)
+
+    forest_moss_btn = Button(themes_frame, text="Forest Moss", command=lambda: set_theme("#000000", "#228B22"), bg="#228B22", fg="#000000", font=smallWindowButtonFont)
+    forest_moss_btn.grid(row=9, column=2, padx=8, pady=10)
+
+    salmon_btn = Button(themes_frame, text="Light Salmon", command=lambda: set_theme("#000000", "#FA8072"), bg="#FA8072", fg="#000000", font=smallWindowButtonFont)
+    salmon_btn.grid(row=9, column=3, padx=8, pady=10)
+
+    goldenrod_btn = Button(themes_frame, text="Goldenrod", command=lambda: set_theme("#000000", "#DAA520"), bg="#DAA520", fg="#000000", font=smallWindowButtonFont)
+    goldenrod_btn.grid(row=9, column=4, padx=8, pady=10)
+
+    chocolate_brown_btn = Button(themes_frame, text="Chocolate Brown", command=lambda: set_theme("#000000", "#D2691E"), bg="#D2691E", fg="#000000", font=smallWindowButtonFont)
+    chocolate_brown_btn.grid(row=10, column=0, padx=8, pady=10)
+
+    slate_blue_btn = Button(themes_frame, text="Medium Slate Blue", command=lambda: set_theme("#000000", "#7B68EE"), bg="#7B68EE", fg="#000000", font=smallWindowButtonFont)
+    slate_blue_btn.grid(row=10, column=1, padx=8, pady=10)
+
+    dark_turquoise_btn = Button(themes_frame, text="Dark Turquoise", command=lambda: set_theme("#000000", "#00CED1"), bg="#00CED1", fg="#000000", font=smallWindowButtonFont)
+    dark_turquoise_btn.grid(row=10, column=2, padx=8, pady=10)
+
+    lime_green_btn = Button(themes_frame, text="Lime Green", command=lambda: set_theme("#000000", "#32CD32"), bg="#32CD32", fg="#000000", font=smallWindowButtonFont)
+    lime_green_btn.grid(row=10, column=3, padx=8, pady=10)
+
+    tomato_btn = Button(themes_frame, text="Tomato Red", command=lambda: set_theme("#000000", "#FF6347"), bg="#FF6347", fg="#000000", font=smallWindowButtonFont)
+    tomato_btn.grid(row=10, column=4, padx=8, pady=10)
 
     
 #Initialising the menubar
