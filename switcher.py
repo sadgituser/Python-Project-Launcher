@@ -1,4 +1,5 @@
 #Imports
+import random
 import json
 import time
 import tkinter as tk
@@ -151,12 +152,14 @@ def extract_exe_icon(exe_path, save_path):
     return True
 
 def import_app_file():
-    imported_file_path = filedialog.askopenfilename(title="Select a File for the App!", filetypes=[("Windows Executable Files", "*.exe"), ("URL Links", "*.url")])
+    imported_file_path = filedialog.askopenfilename(
+        title="Select a File for the App!", 
+        filetypes=[("Windows Executable Files", "*.exe"), ("URL Links", "*.url"), ("All Files", "*.*")]
+    )
     if imported_file_path:
         print("File selected:", imported_file_path)
         imported_app_filepath_variable.set(imported_file_path)
         
-        # Create a unique icon filename using current timestamp so icons don't clash
         assets_dir = Path(__file__).parent / "Assets"
         assets_dir.mkdir(exist_ok=True)
         unique_icon_name = f"icon_{int(time.time())}.png"
@@ -167,8 +170,16 @@ def import_app_file():
             extracted_icon_path_variable.set(str(temp_icon_path))
             print("Successfully extracted .exe icon to:", temp_icon_path)
         else:
-            print("Could not extract icon, using default.")
-            extracted_icon_path_variable.set(str(photo4_image_path))
+            print("Could not extract icon automatically. Please choose a custom icon image.")
+            custom_icon_path = filedialog.askopenfilename(
+                title="Select a custom icon image for this app",
+                filetypes=[("Image Files", "*.png;*.jpg;*.jpeg;*.ico")]
+            )
+            if custom_icon_path:
+                extracted_icon_path_variable.set(custom_icon_path)
+                print("Using custom icon:", custom_icon_path)
+            else:
+                extracted_icon_path_variable.set(str(photo4_image_path))
 
 CONFIG_FILE = Path(__file__).parent / "apps_config.json"
 
@@ -181,7 +192,8 @@ default_stats = {
     "etsy_about_clicks": 0,
     "rickrolls": 0,
     "about_me_opened": 0,
-    "stats_opened": 0
+    "stats_opened": 0,
+    "dev_checks": 0
 }
 
 current_stats = default_stats.copy()
@@ -269,19 +281,20 @@ def load_apps():
             protected = item.get("protected", False)
             raw_path = item["path"]
 
-            # Map the Etsy logo path back to the PhotoImage object safely
             if "photo3.png" in str(raw_path):
                 path_val = myLogo
                 act = launch_etsy
-            elif "dQw4w9WgXcQ" in target or "photo4.png" in str(raw_path):
+            elif "dQw4w9WgXcQ" in target:
                 path_val = Path(raw_path)
                 act=launch_app2
-            elif app_type == "url":
-                act = lambda u=target: (increment_stat("apps_opened"), webbrowser.open_new(u))
-            elif app_type == "exe":
-                act = lambda p=target: (increment_stat("apps_opened"), os.startfile(p))
             else:
-                act = launch_app2
+                path_val = Path(raw_path)
+                if app_type == "url":
+                    act = lambda u=target: (increment_stat("apps_opened"), webbrowser.open_new(u))
+                elif app_type == "exe":
+                    act = lambda p=target: (increment_stat("apps_opened"), os.startfile(p))
+                else:
+                    act = launch_app2
 
             loaded_inventory.append({
                 "path": path_val,
@@ -815,7 +828,7 @@ def openStatsWindow():
 
     statsWindow = Toplevel(root)
     statsWindow.title("Fun Stats Window!")
-    statsWindow.geometry("600x520+50+50")
+    statsWindow.geometry("600x550+50+50")
     statsWindow.resizable(False, False)
     statsWindow.transient(root)
     statsWindow.columnconfigure(0, weight=1)
@@ -850,6 +863,7 @@ def openStatsWindow():
         ("Times Theme Colour Changed:", current_stats.get("colour_changes", 0)),
         ("Times About Me Opened:", current_stats.get("about_me_opened", 0)),
         ("Times Stats Window Opened:", current_stats.get("stats_opened", 0)),
+        ("Times Checked on Dev:", current_stats.get("dev_checks", 0)),
         ("Etsy Clicks (Main Window):", current_stats.get("etsy_root_clicks", 0)),
         ("Etsy Clicks (About Me Window):", current_stats.get("etsy_about_clicks", 0)),
         ("Times YouTube Opened:", current_stats.get("rickrolls", 0)),
@@ -870,8 +884,95 @@ def openStatsWindow():
         command=statsWindow.destroy # Fixed parentheses destroy() -> destroy
     )
     closeBtn.grid(row=3, column=0, pady=20) # Fixed gris -> grid
-    
-#Initialising the menubar
+
+def konami_code_fun():
+    increment_stat("dev_checks")
+
+    devWindow = Toplevel(root)
+    devWindow.title("Secret Dev Window :)")
+    devWindow.geometry("900x200+50+50")
+    devWindow.resizable(False, False)
+    devWindow.transient(root)
+    devWindow.columnconfigure(0, weight=1)
+    devWindow.configure(bg=current_bg, takefocus=True)
+
+    devTitleLabel = Label(devWindow,
+        text="HACKER MODE ACTIVATED: FUN DEV STATUS INITIALISED",
+        font=smallWindowTitleFont,
+        bg=current_bg,
+        fg=current_fg,
+        width=70
+    )
+    devTitleLabel.grid(row=0, column=0, pady=(15, 10))
+
+    statuses = [
+        "Status: TESTING TESTING 123!",
+        "Bug Found!",
+        "Bug Removed!",
+        "Code Combed Over",
+        "Server Status: Up and Running",
+        "Current Mood: Unhappy :(",
+        "Testing Status: Error - Test not Found",
+        "404 - Could not Establish Secure Connection to Cloudflare Servers!",
+        "Hackclub Terra Progress: Devlog not Made!!!",
+        "Undoing All Code",
+        "Initialising Shutdown",
+        "Executing python3.14.exe",
+        "Why not? I'll Change the Code Structure",
+        "camelCaseLooksLikeThis",
+        "Gained SU Permissions, Entering the Mainframe Now",
+        "Nebuchadnezzar Departing Now",
+        "A Voice Says to You: Go Open the Dev's Etsy Shop and Buy Something",
+        "Package Ordered, 9192378943 Days Until Shipment",
+        "Network Disconnected (Just Kidding...)",
+        "Refueling Oil"
+    ]
+    chosen_status = random.choice(statuses)
+
+    devDescLabel = Label(devWindow,
+        text=chosen_status,
+        font=smallWindowDescriptionFont,
+        bg=current_bg,
+        fg=current_fg,
+        wraplength=500,
+        justify="center"
+    )
+    devDescLabel.grid(row=1, pady=20, padx=20)
+
+    def update_status():
+        if devWindow.winfo_exists():
+            new_status = random.choice(statuses)
+            devDescLabel.config(text=new_status)
+            devWindow.after(5000, update_status)
+
+    devWindow.after(5000, update_status)
+
+    closeDevBtn = Button(devWindow,
+        text="DON'T LEAVE ME HERE IN THIS TERMINAL!",
+        bg=current_fg,
+        fg=current_bg,
+        font=smallWindowButtonFont,
+        command=devWindow.destroy
+    )
+    closeDevBtn.grid(row=2, column=0, pady=15)
+
+
+konami_sequence = ["Up", "Up", "Down", "Down", "Left", "Right", "Left", "Right", "b", "a"]
+current_input = []
+def check_konami(event):
+    current_input.append(event.keysym)
+    if len(current_input) > len(konami_sequence):
+        current_input.pop(0)
+
+    normalized_input = [k.lower() for k in current_input]
+    normalized_target = [k.lower() for k in konami_sequence]
+
+    if normalized_input == normalized_target:
+        konami_code_fun()
+        current_input.clear()
+
+
+#Initialising the menubar and menus
 menubar = Menu(root)
 
 fileMenu = Menu(menubar, tearoff=0)
@@ -895,4 +996,5 @@ aboutMeMenu.add_command(label="About Me (Popup Window)", command=openAboutMeWind
 
 root.config(menu=menubar)
 root.bind("<Configure>", lambda e: root.after(100, refresh_app_grid) if e.widget == root else None)
+root.bind("<Key>", check_konami)
 root.mainloop()
