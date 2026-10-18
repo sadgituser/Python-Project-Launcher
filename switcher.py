@@ -356,21 +356,43 @@ def refresh_app_grid():
 # Build the initial grid
 refresh_app_grid()
 
+active_popups = []
 
 def apply_theme(bg_hex, fg_hex):
     global current_bg, current_fg
     current_bg = bg_hex
     current_fg = fg_hex
     
-    # Root window only takes bg (fg is invalid for Tk root)
     root.configure(bg=current_bg, takefocus=True)
-    
-    # Update main labels
     titleLabel.configure(bg=current_bg, fg=current_fg)
     descriptionLabel.configure(bg=current_bg, fg=current_fg)
     
-    # Refresh the grid so any recreated cards match the theme
     refresh_app_grid()
+
+    for win in active_popups:
+        if win.winfo_exists():
+            win.configure(bg=current_bg)
+            
+            def update_widgets(container):
+                for widget in container.winfo_children():
+                    try:
+                        if isinstance(widget, Button):
+                            # Skip theme preset buttons so they keep their original colors!
+                            if getattr(widget, 'is_theme_btn', False):
+                                pass
+                            else:
+                                widget.configure(bg=current_fg, fg=current_bg)
+                        elif isinstance(widget, Frame):
+                            widget.configure(bg=current_bg)
+                            update_widgets(widget)
+                        elif not isinstance(widget, Entry):
+                            widget.configure(bg=current_bg, fg=current_fg)
+                    except Exception:
+                        pass
+            
+            update_widgets(win)
+        else:
+            active_popups.remove(win)
 
 
 #Smaller fonts for small windows
@@ -378,6 +400,7 @@ smallWindowTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold",
 smallWindowDescriptionFont = font.Font(family="IBM Plex Mono", size=14)
 smallWindowButtonFont = font.Font(family="IBM Plex Mono", size=10, underline=True, weight="bold")
 smallWindowEntryFont = font.Font(family="IBM Plex Mono", size=12)
+statNumberFont = font.Font(family="IBM Plex Mono", size=16, weight="bold")
 
 def openRemoveAppWindow():
     global userRemoveAppEntry
@@ -390,6 +413,8 @@ def openRemoveAppWindow():
     removeAppWindow.transient(root)
     removeAppWindow.columnconfigure(0, weight=1)
     removeAppWindow.configure(bg=current_bg, takefocus=True)
+
+    active_popups.append(removeAppWindow)
 
     removeAppTitleLabel = Label(removeAppWindow,
         text="Remove an App",
@@ -466,6 +491,8 @@ def openAboutMeWindow():
     aboutMeWindow.transient(root)
     aboutMeWindow.columnconfigure(0, weight=1)
     aboutMeWindow.configure(bg=current_bg, takefocus=True)
+
+    active_popups.append(aboutMeWindow)
     
     aboutMeTitleLabel = Label(aboutMeWindow,
         text="About Me!",
@@ -512,6 +539,8 @@ def openNewAppWindow():
     newAppWindow.transient(root)
     newAppWindow.columnconfigure(0, weight=1)
     newAppWindow.configure(bg=current_bg, takefocus=True)
+
+    active_popups.append(newAppWindow)
     
     newAppTitleLabel = Label(newAppWindow,
         text="Add A New App",
@@ -605,15 +634,26 @@ def openNewAppWindow():
     )
     createNewAppButton.grid(row=4, pady=9)
 
+def set_theme(bg, fg):
+    increment_stat("colour_changes")
+    apply_theme(bg, fg)
+    save_apps()
+
+def surprise_theme():
+    random_colours = ["#00FF00", "#FF00FF", "#FFB000", "#00D2FF", "#FF0000", "#BD00FF", "#3498DB", "#FFFF00", "#2ECC71", "#E67E22"]
+    chosen_fg = random.choice(random_colours)
+    set_theme("#000000", chosen_fg)
 
 def openCustomiseWindow():
     customiseWindow = Toplevel(root)
     customiseWindow.title("Customise Colours")
-    customiseWindow.geometry("700x650+50+50")
+    customiseWindow.geometry("800x750+50+50")
     customiseWindow.resizable(False, False)
     customiseWindow.transient(root)
     customiseWindow.columnconfigure(0, weight=1)
     customiseWindow.configure(bg=current_bg, takefocus=True)
+
+    active_popups.append(customiseWindow)
    
     customiseWindowTitleLabel = Label(customiseWindow,
         text="Customise Colours!",
@@ -642,6 +682,9 @@ def openCustomiseWindow():
         increment_stat("colour_changes")
         apply_theme(bg, fg)
         save_apps()
+
+    surprise_btn = Button(customiseWindow, text="Surprise Me (Random Theme)", command=surprise_theme, bg=current_fg, fg=current_bg, font=smallWindowButtonFont)
+    surprise_btn.grid(row=11, column=0, columnspan=5, pady=15)
 
     #Buttons
     matrix_btn = Button(themes_frame, text="Matrix Green", command=lambda: set_theme("#000000", "#00FF00"), bg="#00FF00", fg="#000000", font=smallWindowButtonFont)
@@ -809,6 +852,10 @@ def openCustomiseWindow():
     tomato_btn = Button(themes_frame, text="Tomato Red", command=lambda: set_theme("#000000", "#FF6347"), bg="#FF6347", fg="#000000", font=smallWindowButtonFont)
     tomato_btn.grid(row=10, column=4, padx=8, pady=10)
 
+    for child in themes_frame.winfo_children():
+        if isinstance(child, Button):
+            child.is_theme_btn = True
+
 
 default_stats = {
     "colour_changes": 0,
@@ -823,12 +870,12 @@ default_stats = {
 }
 
 def openStatsWindow():
-    # Increment stat as soon as window opens
     increment_stat("stats_opened")
 
     statsWindow = Toplevel(root)
+    active_popups.append(statsWindow)
     statsWindow.title("Fun Stats Window!")
-    statsWindow.geometry("600x550+50+50")
+    statsWindow.geometry("600x610+50+50")
     statsWindow.resizable(False, False)
     statsWindow.transient(root)
     statsWindow.columnconfigure(0, weight=1)
@@ -844,7 +891,7 @@ def openStatsWindow():
     statsTitleLabel.grid(row=0, column=0, pady=(15, 5))
 
     statsDescLabel = Label(statsWindow,
-        text="Here is a breakdown of your activity and usage statistics on this app:",
+        text="Live Stats Dashboard (Updates every 3s):",
         font=smallWindowDescriptionFont,
         bg=current_bg,
         fg=current_fg
@@ -856,34 +903,65 @@ def openStatsWindow():
     stats_frame.columnconfigure(0, weight=1)
     stats_frame.columnconfigure(1, weight=1)
 
+    val_labels = {}
+
     display_metrics = [
-        ("Total Apps/Links Opened:", current_stats.get("apps_opened", 0)),
-        ("Switches Added:", current_stats.get("switches_added", 0)),
-        ("Switches Removed:", current_stats.get("switches_removed", 0)),
-        ("Times Theme Colour Changed:", current_stats.get("colour_changes", 0)),
-        ("Times About Me Opened:", current_stats.get("about_me_opened", 0)),
-        ("Times Stats Window Opened:", current_stats.get("stats_opened", 0)),
-        ("Times Checked on Dev:", current_stats.get("dev_checks", 0)),
-        ("Etsy Clicks (Main Window):", current_stats.get("etsy_root_clicks", 0)),
-        ("Etsy Clicks (About Me Window):", current_stats.get("etsy_about_clicks", 0)),
-        ("Times YouTube Opened:", current_stats.get("rickrolls", 0)),
+        ("Total Apps/Links Opened:", "apps_opened"),
+        ("Switches Added:", "switches_added"),
+        ("Switches Removed:", "switches_removed"),
+        ("Times Theme Colour Changed:", "colour_changes"),
+        ("Times About Me Opened:", "about_me_opened"),
+        ("Times Stats Window Opened:", "stats_opened"),
+        ("Times Checked on Dev:", "dev_checks"),
+        ("Etsy Clicks (Main Window):", "etsy_root_clicks"),
+        ("Etsy Clicks (About Me Window):", "etsy_about_clicks"),
+        ("Times YouTube Opened:", "rickrolls"),
     ]
 
-    for idx, (label_text, val) in enumerate(display_metrics):
+    for idx, (label_text, key) in enumerate(display_metrics):
         lbl = Label(stats_frame, text=label_text, font=smallWindowDescriptionFont, bg=current_bg, fg=current_fg, anchor="w")
-        lbl.grid(row=idx, column=0, sticky="W", pady=4, padx=10) # Fixed px -> padx
+        lbl.grid(row=idx, column=0, sticky="W", pady=4, padx=10)
 
-        val_lbl = Label(stats_frame, text=str(val), font=smallWindowButtonFont, bg=current_bg, fg=current_fg, anchor="e")
-        val_lbl.grid(row=idx, column=1, sticky="E", pady=4, padx=10) # Fixed px -> padx
+        # Using the new, larger statNumberFont here!
+        val_lbl = Label(stats_frame, text=str(current_stats.get(key, 0)), font=statNumberFont, bg=current_bg, fg=current_fg, anchor="e")
+        val_lbl.grid(row=idx, column=1, sticky="E", pady=4, padx=10)
+        
+        val_labels[key] = val_lbl
+
+    def update_live_stats():
+        if statsWindow.winfo_exists():
+            for key, lbl in val_labels.items():
+                lbl.config(text=str(current_stats.get(key, 0)))
+            statsWindow.after(3000, update_live_stats)
+
+    statsWindow.after(3000, update_live_stats)
+
+    def reset_stats():
+        global current_stats
+        current_stats = default_stats.copy()
+        save_apps()
+        statsWindow.destroy()
+        openStatsWindow()
+
+    resetBtn = Button(statsWindow,
+        text="RESET STATS",
+        bg=current_fg,
+        fg=current_bg,
+        font=smallWindowButtonFont,
+        command=reset_stats
+    )
+    resetBtn.grid(row=3, column=0, pady=5)
 
     closeBtn = Button(statsWindow,
         text="CLOSE DASHBOARD",
         bg=current_fg,
         fg=current_bg,
         font=smallWindowButtonFont,
-        command=statsWindow.destroy # Fixed parentheses destroy() -> destroy
+        command=statsWindow.destroy
     )
-    closeBtn.grid(row=3, column=0, pady=20) # Fixed gris -> grid
+    closeBtn.grid(row=4, column=0, pady=15)
+
+
 
 def konami_code_fun():
     increment_stat("dev_checks")
