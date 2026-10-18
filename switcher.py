@@ -241,18 +241,17 @@ def refresh_app_grid():
     for index, app_data in enumerate(apps_inventory):
         row_num = 2 + (index // 2)
         col_num = index % 2
+        img_path = app_data["path"]
+        if img_path != myLogo and not isinstance(img_path, Path):
+            img_path = Path(img_path)
 
-    img_path = app_data["path"]
-    if img_path != myLogo and not isinstance(img_path, Path):
-        img_path = Path(img_path)
-
-    card = AppCard(
-        parent_window=root,
-        image_path=app_data["path"],
-        description_text=app_data["desc"],
-        launch_command=app_data["action"]
-    )
-    card.place_card(row_num=row_num, col_num=col_num)
+        card = AppCard(
+            parent_window=root,
+            image_path=app_data["path"],
+            description_text=app_data["desc"],
+            launch_command=app_data["action"]
+        )
+        card.place_card(row_num=row_num, col_num=col_num)
 
 # Build the initial grid
 refresh_app_grid()
@@ -273,7 +272,7 @@ def openRemoveAppWindow():
     removeAppWindow.resizable(False, False)
     removeAppWindow.transient(root)
     removeAppWindow.columnconfigure(0, weight=1)
-    removeAppWindow.configure(ng="#000000", takefocus=True)
+    removeAppWindow.configure(bg="#000000", takefocus=True)
 
     removeAppTitleLabel = Label(removeAppWindow,
         text="Remove an App",
