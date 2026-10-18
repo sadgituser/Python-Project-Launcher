@@ -17,6 +17,7 @@ from app_card import AppCard
 def openEtsyURL(event):
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
+
 #Initialise root window
 root = tk.Tk()
 root.title("Python App Switcher")
@@ -60,6 +61,10 @@ hackClubLogo = tk.PhotoImage(file=photo1_image_path)
 photo3_image_path = Path(__file__).parent / "Assets" / "photo3.png"
 myLogo = tk.PhotoImage(file=photo3_image_path)
 photo4_image_path = Path(__file__).parent / "Assets" / "photo4.png"
+photo5_image_path = Path(__file__).parent / "Assets" / "photo5.png"
+mainIcon = tk.PhotoImage(file=photo5_image_path)
+
+root.iconphoto(True, mainIcon)
 
 #What do launch buttons do?
 def launch_etsy():
