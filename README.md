@@ -1,5 +1,5 @@
 # Python-Project-Launcher
-A python app (built in TKinter) that will allow you to launch other apps, websites from me or apps/websites from other places.
+A python app (built in TKinter) that will allow you to launch other apps or websites from me.
 
 ![A screenshot of all of the windows of the program](/Assets/photo6.png)
 

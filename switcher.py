@@ -15,6 +15,7 @@ from app_card import AppCard
 
 #Open Etsy URL (for image)
 def openEtsyURL(event):
+    increment_stat("etsy_about_clicks")
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
 current_bg = "#000000"
@@ -70,9 +71,13 @@ root.iconphoto(True, mainIcon)
 
 #What do launch buttons do?
 def launch_etsy():
+    increment_stat("etsy_root_clicks")
+    increment_stat("apps_opened")
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
 def launch_app2():
+    increment_stat("rickrolls")
+    increment_stat("apps_opened")
     webbrowser.open_new("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
 imported_app_filepath_variable = StringVar()
@@ -146,7 +151,7 @@ def extract_exe_icon(exe_path, save_path):
     return True
 
 def import_app_file():
-    imported_file_path = filedialog.askopenfilename(title="Select a File for the App!", filetypes=[("Windows Executable Files", "*.exe")])
+    imported_file_path = filedialog.askopenfilename(title="Select a File for the App!", filetypes=[("Windows Executable Files", "*.exe"), ("URL Links", "*.url")])
     if imported_file_path:
         print("File selected:", imported_file_path)
         imported_app_filepath_variable.set(imported_file_path)
@@ -167,9 +172,24 @@ def import_app_file():
 
 CONFIG_FILE = Path(__file__).parent / "apps_config.json"
 
+default_stats = {
+    "colour_changes": 0,
+    "switches_added": 0,
+    "switches_removed": 0,
+    "apps_opened": 0,
+    "etsy_root_clicks": 0,
+    "etsy_about_clicks": 0,
+    "rickrolls": 0,
+    "about_me_opened": 0,
+    "stats_opened": 0
+}
+
+current_stats = default_stats.copy()
+
 def save_apps():
     data_to_save = {
         "theme": {"bg": current_bg, "fg": current_fg},
+        "stats": current_stats,
         "apps": []
     }
     for app in apps_inventory:
@@ -189,61 +209,82 @@ def save_apps():
     with open(CONFIG_FILE, "w") as f:
         json.dump(data_to_save, f, indent=4)
 
-def load_apps():
-    global current_fg, current_bg
-    default_apps = [
-        {
-            "path": myLogo,
-            "desc": "My Etsy Shop. Check it out!",
-            "action": launch_etsy,
-            "target": "https://theprintedcraftuk.etsy.com",
-            "type": "url",
-            "protected": True
-        },
-        {
-            "path": photo4_image_path,
-            "desc": "App 2!",
-            "action": launch_app2,
-            "target": "https://www.youtube.com/watch?v=a7Lq6ZlSqys",
-            "type": "url",
-            "protected": True
-        }
-    ]
+def increment_stat(stat_key):
+    global current_stats
+    current_stats[stat_key] = current_stats.get(stat_key, 0) + 1
+    save_apps()
 
+def load_apps():
+    global current_fg, current_bg, current_stats
+    
+    # Define complete default structure including theme and apps
+    default_data = {
+        "theme": {"bg": "#000000", "fg": "#00FF00"},
+        "stats": default_stats,
+        "apps": [
+            {
+                "path": str(Path(__file__).parent / "Assets" / "photo3.png"),
+                "desc": "My Etsy Shop. Check it out!",
+                "target": "https://theprintedcraftuk.etsy.com",
+                "type": "url",
+                "protected": True
+            },
+            {
+                "path": str(photo4_image_path),
+                "desc": "App 2!",
+                "target": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                "type": "url",
+                "protected": True
+            }
+        ]
+    }
+
+    # If the config file doesn't exist, create it automatically with defaults
     if not CONFIG_FILE.exists():
-        return default_apps
+        with open(CONFIG_FILE, "w") as f:
+            json.dump(default_data, f, indent=4)
 
     try:
         with open(CONFIG_FILE, "r") as f:
             content = json.load(f)
 
-        if isinstance(content, list):
-            saved_data = content
-        else:
-            saved_data = content.get("apps", default_apps)
+        # Handle backward compatibility if an old list-only file exists
+        if isinstance(content, dict):
+            saved_data = content.get("apps", default_data["apps"])
             theme_data = content.get("theme", {})
+            current_stats = content.get("stats", default_stats.copy())
+
             current_bg = theme_data.get("bg", "#000000")
             current_fg = theme_data.get("fg", "#00FF00")
-            root.configure(bg=current_bg)
+            root.config(bg=current_bg)
             titleLabel.configure(bg=current_bg, fg=current_fg)
             descriptionLabel.configure(bg=current_bg, fg=current_fg)
-
+        else:
+            saved_data = content
 
         loaded_inventory = []
         for item in saved_data:
             target = item["target"]
             app_type = item["type"]
             protected = item.get("protected", False)
+            raw_path = item["path"]
 
-            if app_type == "url":
-                act = lambda u=target: webbrowser.open_new(u)
+            # Map the Etsy logo path back to the PhotoImage object safely
+            if "photo3.png" in str(raw_path):
+                path_val = myLogo
+                act = launch_etsy
+            elif "dQw4w9WgXcQ" in target or "photo4.png" in str(raw_path):
+                path_val = Path(raw_path)
+                act=launch_app2
+            elif app_type == "url":
+                act = lambda u=target: (increment_stat("apps_opened"), webbrowser.open_new(u))
             elif app_type == "exe":
-                act = lambda path=target: os.startfile(path)
+                act = lambda p=target: (increment_stat("apps_opened"), os.startfile(p))
             else:
                 act = launch_app2
 
             loaded_inventory.append({
-                "path": Path(item["path"]),
+                "path": path_val,
                 "desc": item["desc"],
                 "action": act,
                 "target": target,
@@ -253,7 +294,7 @@ def load_apps():
         return loaded_inventory
     except Exception as e:
         print(f"Error loading config: {e}")
-        return default_apps
+        return []
 
 apps_inventory = load_apps()
 
@@ -368,6 +409,7 @@ def openRemoveAppWindow():
     removeAppDescriptionTextEntry.grid(row=2, pady=9)
 
     def executeRemoveApp():
+        increment_stat("switches_removed")
         target_desc = userRemoveAppEntry.get().strip()
         global apps_inventory
 
@@ -403,6 +445,7 @@ def openRemoveAppWindow():
 
 #Initialise 'About Me' window (function)
 def openAboutMeWindow():
+    increment_stat("about_me_opened")
     aboutMeWindow = Toplevel(root)
     aboutMeWindow.title("About Me")
     aboutMeWindow.geometry("650x375+50+50")
@@ -497,6 +540,7 @@ def openNewAppWindow():
     import_file_button.grid(row=3, pady=9)
 
     def createNewUserApp():
+        increment_stat("switches_added")
         desc = userNewAppEntry.get()
         filepath = imported_app_filepath_variable.get()
         icon_path = extracted_icon_path_variable.get()
@@ -582,6 +626,7 @@ def openCustomiseWindow():
     themes_frame.grid(row=2, column=0, pady=20)
 
     def set_theme(bg, fg):
+        increment_stat("colour_changes")
         apply_theme(bg, fg)
         save_apps()
 
@@ -751,6 +796,80 @@ def openCustomiseWindow():
     tomato_btn = Button(themes_frame, text="Tomato Red", command=lambda: set_theme("#000000", "#FF6347"), bg="#FF6347", fg="#000000", font=smallWindowButtonFont)
     tomato_btn.grid(row=10, column=4, padx=8, pady=10)
 
+
+default_stats = {
+    "colour_changes": 0,
+    "switches_added": 0,
+    "switches_removed": 0,
+    "apps_opened": 0,
+    "etsy_root_clicks": 0,
+    "etsy_about_clicks": 0,
+    "rickrolls": 0,
+    "about_me_opened": 0,
+    "stats_opened": 0  # <--- NEW STAT
+}
+
+def openStatsWindow():
+    # Increment stat as soon as window opens
+    increment_stat("stats_opened")
+
+    statsWindow = Toplevel(root)
+    statsWindow.title("Fun Stats Window!")
+    statsWindow.geometry("600x520+50+50")
+    statsWindow.resizable(False, False)
+    statsWindow.transient(root)
+    statsWindow.columnconfigure(0, weight=1)
+    statsWindow.configure(bg=current_bg, takefocus=True)
+
+    statsTitleLabel = Label(statsWindow,
+        text="Switcher Stats!",
+        font=smallWindowTitleFont,
+        bg=current_bg,
+        fg=current_fg,
+        width=25
+    )
+    statsTitleLabel.grid(row=0, column=0, pady=(15, 5))
+
+    statsDescLabel = Label(statsWindow,
+        text="Here is a breakdown of your activity and usage statistics on this app:",
+        font=smallWindowDescriptionFont,
+        bg=current_bg,
+        fg=current_fg
+    )
+    statsDescLabel.grid(row=1, column=0, pady=(0, 15))
+
+    stats_frame = Frame(statsWindow, bg=current_bg)
+    stats_frame.grid(row=2, column=0, padx=20, pady=10, sticky="EW")
+    stats_frame.columnconfigure(0, weight=1)
+    stats_frame.columnconfigure(1, weight=1)
+
+    display_metrics = [
+        ("Total Apps/Links Opened:", current_stats.get("apps_opened", 0)),
+        ("Switches Added:", current_stats.get("switches_added", 0)),
+        ("Switches Removed:", current_stats.get("switches_removed", 0)),
+        ("Times Theme Colour Changed:", current_stats.get("colour_changes", 0)),
+        ("Times About Me Opened:", current_stats.get("about_me_opened", 0)),
+        ("Times Stats Window Opened:", current_stats.get("stats_opened", 0)),
+        ("Etsy Clicks (Main Window):", current_stats.get("etsy_root_clicks", 0)),
+        ("Etsy Clicks (About Me Window):", current_stats.get("etsy_about_clicks", 0)),
+        ("Times YouTube Opened:", current_stats.get("rickrolls", 0)),
+    ]
+
+    for idx, (label_text, val) in enumerate(display_metrics):
+        lbl = Label(stats_frame, text=label_text, font=smallWindowDescriptionFont, bg=current_bg, fg=current_fg, anchor="w")
+        lbl.grid(row=idx, column=0, sticky="W", pady=4, padx=10) # Fixed px -> padx
+
+        val_lbl = Label(stats_frame, text=str(val), font=smallWindowButtonFont, bg=current_bg, fg=current_fg, anchor="e")
+        val_lbl.grid(row=idx, column=1, sticky="E", pady=4, padx=10) # Fixed px -> padx
+
+    closeBtn = Button(statsWindow,
+        text="CLOSE DASHBOARD",
+        bg=current_fg,
+        fg=current_bg,
+        font=smallWindowButtonFont,
+        command=statsWindow.destroy # Fixed parentheses destroy() -> destroy
+    )
+    closeBtn.grid(row=3, column=0, pady=20) # Fixed gris -> grid
     
 #Initialising the menubar
 menubar = Menu(root)
@@ -764,6 +883,10 @@ fileMenu.add_command(label="Remove Switches/Apps", command=openRemoveAppWindow)
 customiseMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="Customise", menu=customiseMenu)
 customiseMenu.add_command(label="Change Colours", command=openCustomiseWindow)
+
+statsMenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Statistics", menu=statsMenu)
+statsMenu.add_command(label="View Stats Dashboard", command=openStatsWindow)
 
 aboutMeMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="About Me", menu=aboutMeMenu)
