@@ -584,7 +584,6 @@ def openCustomiseWindow():
     def set_theme(bg, fg):
         apply_theme(bg, fg)
         save_apps()
-        customiseWindow.destroy()
 
     #Buttons
     matrix_btn = Button(themes_frame, text="Matrix Green", command=lambda: set_theme("#000000", "#00FF00"), bg="#00FF00", fg="#000000", font=smallWindowButtonFont)
