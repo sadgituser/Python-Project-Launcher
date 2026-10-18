@@ -17,13 +17,15 @@ from app_card import AppCard
 def openEtsyURL(event):
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
+current_bg = "#000000"
+current_fg="#00FF00"
+
 
 #Initialise root window
 root = tk.Tk()
 root.title("Python App Switcher")
 root.geometry("800x750+150+150")
 root.minsize(800, 750)
-root.configure(bg="#000000", takefocus=True)
 
 # Configure the 2 columns to center content horizontally
 root.columnconfigure(0, weight=1)
@@ -37,8 +39,8 @@ descriptionFont = font.Font(family="IBM Plex Mono", size=12, weight="normal")
 titleLabel = tk.Label(root,
     text="Python App Switcher!",
     font=titleFont,
-    bg="#000000",
-    fg="#00FF00",
+    bg=current_bg,
+    fg=current_fg,
     width="20",
     anchor="center"
 )
@@ -48,8 +50,8 @@ titleLabel.grid(row=0, column=0, columnspan=2, pady=(10, 10))
 descriptionLabel = tk.Label(root,
     text="This is my Python app for switching between different apps. Enjoy!",
     font=descriptionFont,
-    bg="#000000",
-    fg="#00FF00",
+    bg=current_bg,
+    fg=current_fg,
     anchor="center",
     justify="center"
 )
@@ -71,7 +73,7 @@ def launch_etsy():
     webbrowser.open_new("https://theprintedcraftuk.etsy.com")
 
 def launch_app2():
-    webbrowser.open_new("https://www.youtube.com/watch?v=a7Lq6ZlSqys")
+    webbrowser.open_new("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
 imported_app_filepath_variable = StringVar()
 # Tracks the path of the icon extracted from the selected .exe
@@ -166,7 +168,10 @@ def import_app_file():
 CONFIG_FILE = Path(__file__).parent / "apps_config.json"
 
 def save_apps():
-    data_to_save = []
+    data_to_save = {
+        "theme": {"bg": current_bg, "fg": current_fg},
+        "apps": []
+    }
     for app in apps_inventory:
         img_path = app["path"]
         if img_path == myLogo:
@@ -174,7 +179,7 @@ def save_apps():
         else:
             img_str = str(img_path)
 
-        data_to_save.append({
+        data_to_save["apps"].append({
             "path": img_str,
             "desc": app["desc"],
             "target": app["target"],
@@ -185,6 +190,7 @@ def save_apps():
         json.dump(data_to_save, f, indent=4)
 
 def load_apps():
+    global current_fg, current_bg
     default_apps = [
         {
             "path": myLogo,
@@ -209,7 +215,19 @@ def load_apps():
 
     try:
         with open(CONFIG_FILE, "r") as f:
-            saved_data = json.load(f)
+            content = json.load(f)
+
+        if isinstance(content, list):
+            saved_data = content
+        else:
+            saved_data = content.get("apps", default_apps)
+            theme_data = content.get("theme", {})
+            current_bg = theme_data.get("bg", "#000000")
+            current_fg = theme_data.get("fg", "#00FF00")
+            root.configure(bg=current_bg)
+            titleLabel.configure(bg=current_bg, fg=current_fg)
+            descriptionLabel.configure(bg=current_bg, fg=current_fg)
+
 
         loaded_inventory = []
         for item in saved_data:
@@ -269,16 +287,37 @@ def refresh_app_grid():
         if img_path != myLogo and not isinstance(img_path, Path):
             img_path = Path(img_path)
 
+        # PASS THE CURRENT THEME COLORS TO THE APP CARD HERE:
         card = AppCard(
             parent_window=root,
             image_path=app_data["path"],
             description_text=app_data["desc"],
-            launch_command=app_data["action"]
+            launch_command=app_data["action"],
+            bg_color=current_bg,
+            fg_color=current_fg
         )
         card.place_card(row_num=row_num, col_num=col_num)
 
+
 # Build the initial grid
 refresh_app_grid()
+
+
+def apply_theme(bg_hex, fg_hex):
+    global current_bg, current_fg
+    current_bg = bg_hex
+    current_fg = fg_hex
+    
+    # Root window only takes bg (fg is invalid for Tk root)
+    root.configure(bg=current_bg, takefocus=True)
+    
+    # Update main labels
+    titleLabel.configure(bg=current_bg, fg=current_fg)
+    descriptionLabel.configure(bg=current_bg, fg=current_fg)
+    
+    # Refresh the grid so any recreated cards match the theme
+    refresh_app_grid()
+
 
 #Smaller fonts for small windows
 smallWindowTitleFont = font.Font(family="IBM Plex Mono", size=20, weight="bold", underline=True)
@@ -292,17 +331,17 @@ def openRemoveAppWindow():
 
     removeAppWindow = Toplevel(root)
     removeAppWindow.title("Remove App")
-    removeAppWindow.geometry("650x375+50+50")
+    removeAppWindow.geometry("650x250+50+50")
     removeAppWindow.resizable(False, False)
     removeAppWindow.transient(root)
     removeAppWindow.columnconfigure(0, weight=1)
-    removeAppWindow.configure(bg="#000000", takefocus=True)
+    removeAppWindow.configure(bg=current_bg, takefocus=True)
 
     removeAppTitleLabel = Label(removeAppWindow,
         text="Remove an App",
         font=smallWindowTitleFont,
-        bg="#000000",
-        fg="#00FF00",
+        bg=current_bg,
+        fg=current_fg,
         width=15
     )
     removeAppTitleLabel.grid(row=0, column=0, pady=7)
@@ -311,8 +350,8 @@ def openRemoveAppWindow():
         text="Enter the exact description of the app you want to remove below. " \
         "(Note: Default apps cannot be removed!)",
         font=smallWindowDescriptionFont,
-        bg="#000000",
-        fg="#00FF00",
+        bg=current_bg,
+        fg=current_fg,
         width=16,
         wraplength=625,
         justify="left"
@@ -355,8 +394,8 @@ def openRemoveAppWindow():
     removeAppButton = Button(removeAppWindow,
         text="REMOVE APP",
         font=smallWindowButtonFont,
-        bg="#00FF00",
-        fg="#000000",
+        bg=current_fg,
+        fg=current_bg,
         command=executeRemoveApp
     )
     removeAppButton.grid(row=3, pady=9)
@@ -370,13 +409,13 @@ def openAboutMeWindow():
     aboutMeWindow.resizable(False, False)
     aboutMeWindow.transient(root)
     aboutMeWindow.columnconfigure(0, weight=1)
-    aboutMeWindow.configure(bg="#000000", takefocus=True)
+    aboutMeWindow.configure(bg=current_bg, takefocus=True)
     
     aboutMeTitleLabel = Label(aboutMeWindow,
         text="About Me!",
         font=smallWindowTitleFont,
-        bg="#000000",
-        fg="#00FF00",
+        bg=current_bg,
+        fg=current_fg,
         width=10
     )
     aboutMeTitleLabel.grid(row=0, column=0, pady=5)
@@ -389,8 +428,8 @@ def openAboutMeWindow():
         "Currently there is nowhere that you can support my work, but you can check out my Etsy shop at (https://theprintedcraftuk.etsy.com)! " \
         "Enjoy the app switcher, I hope that you find use in it! ",
         font=smallWindowDescriptionFont,
-        bg="#000000",
-        fg="#00FF00",
+        bg=current_bg,
+        fg=current_fg,
         width=16,
         wraplength=625,
         justify="left"
@@ -400,6 +439,7 @@ def openAboutMeWindow():
     myLogo_descriptionLabel = Label(aboutMeWindow, image=myLogo, cursor="hand2")
     myLogo_descriptionLabel.grid(row=2, column=0, pady=10)
     myLogo_descriptionLabel.bind("<Button-1>", openEtsyURL)
+
 
 #Initialise 'Add New App' window (function)
 def openNewAppWindow():
@@ -415,13 +455,13 @@ def openNewAppWindow():
     newAppWindow.resizable(False, False)
     newAppWindow.transient(root)
     newAppWindow.columnconfigure(0, weight=1)
-    newAppWindow.configure(bg="#000000", takefocus=True)
+    newAppWindow.configure(bg=current_bg, takefocus=True)
     
     newAppTitleLabel = Label(newAppWindow,
         text="Add A New App",
         font=smallWindowTitleFont,
-        bg="#000000",
-        fg="#00FF00",
+        bg=current_bg,
+        fg=current_fg,
         width=15
     )
     newAppTitleLabel.grid(row=0, column=0, pady=7)
@@ -430,8 +470,8 @@ def openNewAppWindow():
         text="Here you can add new apps to the switcher! Fill out the fields to get started! " \
         "Enter the App Description in the white entry field and select the file using Import File!",
         font=smallWindowDescriptionFont,
-        bg="#000000",
-        fg="#00FF00",
+        bg=current_bg,
+        fg=current_fg,
         width=16,
         wraplength=625,
         justify="left"
@@ -451,8 +491,8 @@ def openNewAppWindow():
         text="Import File",
         command=import_app_file,
         font=smallWindowButtonFont,
-        bg="#00FF00",
-        fg="#000000"
+        bg=current_fg,
+        fg=current_bg
     )
     import_file_button.grid(row=3, pady=9)
 
@@ -502,24 +542,89 @@ def openNewAppWindow():
     createNewAppButton = Button(newAppWindow,
         text="CREATE APP!",
         font=smallWindowButtonFont,
-        bg="#00FF00",
-        fg="#000000",
+        bg=current_fg,
+        fg=current_bg,
         command=createNewUserApp
     )
     createNewAppButton.grid(row=4, pady=9)
 
+
+def openCustomiseWindow():
+    customiseWindow = Toplevel(root)
+    customiseWindow.title("Customise")
+    customiseWindow.geometry("650x375+50+50")
+    customiseWindow.resizable(False, False)
+    customiseWindow.transient(root)
+    customiseWindow.columnconfigure(0, weight=1)
+    customiseWindow.configure(bg=current_bg, takefocus=True)
+   
+    customiseWindowTitleLabel = Label(customiseWindow,
+        text="Customise Colours!",
+        font=smallWindowTitleFont,
+        bg=current_bg,
+        fg=current_fg,
+        width=20
+    )
+    customiseWindowTitleLabel.grid(row=0, column=0, pady=5)
+    
+    customiseWindowDescriptionLabel = Label(customiseWindow,
+        text="Here you can change the colours of the whole window!",
+        font=smallWindowDescriptionFont,
+        bg=current_bg,
+        fg=current_fg,
+        width=16,
+        wraplength=625,
+        justify="left"
+    )
+    customiseWindowDescriptionLabel.grid(row=1, pady=7, sticky="EW")
+
+    themes_frame = Frame(customiseWindow, bg=current_bg)
+    themes_frame.grid(row=2, column=0, pady=20)
+
+    def set_theme(bg, fg):
+        apply_theme(bg, fg)
+        save_apps()
+        customiseWindow.destroy()
+
+    matrix_btn = Button(themes_frame, text="Matrix Green", command=lambda: set_theme("#000000", "#00FF00"), bg="#00FF00", fg="#000000", font=smallWindowButtonFont)
+    matrix_btn.grid(row=0, column=0, padx=8)
+    
+    cyber_btn = Button(themes_frame, text="Cyberpunk Pink", command=lambda: set_theme("#000000", "#FF00FF"), bg="#FF00FF", fg="#000000", font=smallWindowButtonFont)
+    cyber_btn.grid(row=0, column=1, padx=8)
+    
+    amber_btn = Button(themes_frame, text="Retro Amber", command=lambda: set_theme("#000000", "#FFB000"), bg="#FFB000", fg="#000000", font=smallWindowButtonFont)
+    amber_btn.grid(row=0, column=2, padx=8)
+
+    ice_btn = Button(themes_frame, text="Ice Blue", command=lambda: set_theme("#000000", "#00D2FF"), bg="#00D2FF", fg="#000000", font=smallWindowButtonFont)
+    ice_btn.grid(row=0, column=3, padx=8)
+
+    grey_btn = Button(themes_frame, text="Sad Grey", command=lambda: set_theme("#000000", "#89827C"), bg="#89827C", fg="#000000", font=smallWindowButtonFont)
+    grey_btn.grid(row=0, column=4, padx=8)
+
+    anger_btn = Button(themes_frame, text="Angry Red", command=lambda: set_theme("#000000", "#FF0000"), bg="#FF0000", fg="#000000", font=smallWindowButtonFont)
+    anger_btn.grid(row=1, column=0, padx=8, pady=10)
+
+    contemplative_blue_btn = Button(themes_frame, text="Contemplative Blue", command=lambda: set_theme("#000000", "#0B3F83"), bg="#0B3F83", fg="#000000", font=smallWindowButtonFont)
+    contemplative_blue_btn.grid(row=1, column=1, padx=8, pady=10)
+
+    
 #Initialising the menubar
 menubar = Menu(root)
 
 fileMenu = Menu(menubar, tearoff=0)
-menubar.add_cascade(label="File", menu=fileMenu)
+menubar.add_cascade(label="Switch/App Settings", menu=fileMenu)
 fileMenu.add_command(label="Add New Switch/App", command=openNewAppWindow)
 fileMenu.add_separator()
 fileMenu.add_command(label="Remove Switches/Apps", command=openRemoveAppWindow)
 
+customiseMenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Customise", menu=customiseMenu)
+customiseMenu.add_command(label="Change Colours", command=openCustomiseWindow)
+
 aboutMeMenu = Menu(menubar, tearoff=0)
 menubar.add_cascade(label="About Me", menu=aboutMeMenu)
 aboutMeMenu.add_command(label="About Me (Popup Window)", command=openAboutMeWindow)
+
 
 root.config(menu=menubar)
 root.bind("<Configure>", lambda e: root.after(100, refresh_app_grid) if e.widget == root else None)

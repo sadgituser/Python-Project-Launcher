@@ -5,10 +5,10 @@ from pathlib import Path
 from collections import deque
 
 class AppCard:
-    def __init__ (self, parent_window, image_path, description_text, launch_command):
+    def __init__ (self, parent_window, image_path, description_text, launch_command, bg_color="#000000", fg_color="#00FF00"):
         
-        # Local Frame Container
-        self.frame = tk.Frame(parent_window, bg="#000000")
+        # Local Frame Container using theme background
+        self.frame = tk.Frame(parent_window, bg=bg_color)
 
         # Check FIRST if image_path is already a tk.PhotoImage object (like myLogo)
         if isinstance(image_path, tk.PhotoImage):
@@ -49,17 +49,18 @@ class AppCard:
 
             self.tk_image = ImageTk.PhotoImage(resized_image)
 
-        # Create widgets in frame
-        self.logo_label = tk.Label(self.frame, image=self.tk_image, bg="#000000")
+        # Create widgets in frame styled with current theme colors
+        self.logo_label = tk.Label(self.frame, image=self.tk_image, bg=bg_color)
         self.logo_label.image = self.tk_image  # Prevent garbage collection
         self.logo_label.grid(row=0, column=0, pady=5)
 
-        self.desc_label = tk.Label(self.frame, text=description_text, fg="#00FF00", bg="#000000", wraplength=150)
+        self.desc_label = tk.Label(self.frame, text=description_text, fg=fg_color, bg=bg_color, wraplength=150)
         self.desc_label.grid(row=1, column=0, pady=5)
 
         smallWindowButtonFont = font.Font(family="IBM Plex Mono", size=10, underline=True, weight="bold")
 
-        self.button = tk.Button(self.frame, text="LAUNCH APP!", command=launch_command, bg="#00FF00", fg="#000000", font=smallWindowButtonFont)
+        # Button background uses the accent (fg) color, text uses the window (bg) color for contrast
+        self.button = tk.Button(self.frame, text="LAUNCH APP!", command=launch_command, bg=fg_color, fg=bg_color, font=smallWindowButtonFont)
         self.button.grid(row=2, column=0, pady=5)
 
     def place_card(self, row_num, col_num):
