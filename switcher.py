@@ -20,8 +20,8 @@ def openEtsyURL(event):
 #Initialise root window
 root = tk.Tk()
 root.title("Python App Switcher")
-root.geometry("800x600+150+150")
-root.minsize(800, 600)
+root.geometry("800x750+150+150")
+root.minsize(800, 750)
 root.configure(bg="#000000", takefocus=True)
 
 # Configure the 2 columns to center content horizontally
@@ -38,7 +38,8 @@ titleLabel = tk.Label(root,
     font=titleFont,
     bg="#000000",
     fg="#00FF00",
-    width="20"
+    width="20",
+    anchor="center"
 )
 titleLabel.grid(row=0, column=0, columnspan=2, pady=(10, 10))
 
@@ -47,7 +48,9 @@ descriptionLabel = tk.Label(root,
     text="This is my Python app for switching between different apps. Enjoy!",
     font=descriptionFont,
     bg="#000000",
-    fg="#00FF00"
+    fg="#00FF00",
+    anchor="center",
+    justify="center"
 )
 descriptionLabel.grid(row=1, column=0, columnspan=2, pady=10)
 
@@ -237,10 +240,26 @@ def refresh_app_grid():
         if int(info.get("row", 0)) >= 2:
             widget.destroy()
 
+    window_width = root.winfo_width()
+    if window_width <= 1:
+        max_cols = 2  
+    elif window_width < 500:
+        max_cols = 1
+    else:
+        max_cols = max(2, window_width // 350)
+
+    for i in range(10):
+        root.columnconfigure(i, weight=0)
+    for i in range(max_cols):
+        root.columnconfigure(i, weight=1)
+
+    titleLabel.grid(row=0, column=0, columnspan=max_cols, pady=(10, 10), sticky="EW")
+    descriptionLabel.grid(row=1, column=0, columnspan=max_cols, pady=10, sticky="EW")
 
     for index, app_data in enumerate(apps_inventory):
-        row_num = 2 + (index // 2)
-        col_num = index % 2
+        row_num = 2 + (index // max_cols)
+        col_num = index % max_cols
+
         img_path = app_data["path"]
         if img_path != myLogo and not isinstance(img_path, Path):
             img_path = Path(img_path)
@@ -498,4 +517,5 @@ menubar.add_cascade(label="About Me", menu=aboutMeMenu)
 aboutMeMenu.add_command(label="About Me (Popup Window)", command=openAboutMeWindow)
 
 root.config(menu=menubar)
+root.bind("<Configure>", lambda e: root.after(100, refresh_app_grid) if e.widget == root else None)
 root.mainloop()
