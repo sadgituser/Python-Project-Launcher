@@ -14,6 +14,19 @@ from ctypes import wintypes
 from PIL import Image, ImageTk
 from app_card import AppCard
 import sys
+import platform
+import subprocess
+
+def launch_file(filepath):
+    try:
+        if sys.platform == "win32":
+            os.startfile(filepath)
+        elif sys.platform == "darwin":  # macOS
+            subprocess.run(["open", filepath])
+        else:
+            subprocess.run(["xdg-open", filepath])
+    except Exception as e:
+        print(f"Error launching app: {e}")
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -98,6 +111,10 @@ extracted_icon_path_variable = StringVar(value=str(photo4_image_path))
 
 # Helper function to extract an icon directly from a Windows .exe resource using ExtractIconExW
 def extract_exe_icon(exe_path, save_path):
+
+    if sys.platform != "win32":
+        return False
+
     shell32 = ctypes.windll.shell32
     user32 = ctypes.windll.user32
     gdi32 = ctypes.windll.gdi32
@@ -171,7 +188,8 @@ def import_app_file():
         print("File selected:", imported_file_path)
         imported_app_filepath_variable.set(imported_file_path)
         
-        assets_dir = Path(__file__).parent / "Assets"
+        # Save custom icons next to the exe/script, not in temp storage
+        assets_dir = base_path / "Assets"
         assets_dir.mkdir(exist_ok=True)
         unique_icon_name = f"icon_{int(time.time())}.png"
         temp_icon_path = assets_dir / unique_icon_name
@@ -190,9 +208,14 @@ def import_app_file():
                 extracted_icon_path_variable.set(custom_icon_path)
                 print("Using custom icon:", custom_icon_path)
             else:
-                extracted_icon_path_variable.set(str(photo4_image_path))
+                extracted_icon_path_variable.set(str(resource_path("Assets/photo4.png")))
 
-CONFIG_FILE = Path(__file__).parent / "apps_config.json"
+if getattr(sys, 'frozen', False):
+    base_path = Path(sys.executable).parent
+else:
+    base_path = Path(__file__).parent
+
+CONFIG_FILE = base_path / "apps_config.json"
 
 default_stats = {
     "colour_changes": 0,
@@ -246,14 +269,14 @@ def load_apps():
         "stats": default_stats,
         "apps": [
             {
-                "path": str(Path(__file__).parent / "Assets" / "photo3.png"),
+                "path": str(resource_path("Assets/photo3.png")),
                 "desc": "My Etsy Shop. Check it out!",
                 "target": "https://theprintedcraftuk.etsy.com",
                 "type": "url",
                 "protected": True
             },
             {
-                "path": str(photo4_image_path),
+                "path": str(resource_path("Assets/photo4.png")),
                 "desc": "App 2!",
                 "target": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 "type": "url",
@@ -292,18 +315,24 @@ def load_apps():
             protected = item.get("protected", False)
             raw_path = item["path"]
 
+            filename = Path(raw_path).name
+
             if "photo3.png" in str(raw_path):
                 path_val = myLogo
                 act = launch_etsy
-            elif "dQw4w9WgXcQ" in target:
-                path_val = Path(raw_path)
-                act=launch_app2
+            elif filename in ["photo1.png", "photo3.png", "photo4.png", "photo5.png"]:
+                path_val = resource_path(f"Assets/{filename}")
+                act = launch_app2 if "dQw4w9WgXcQ" in target else (lambda u=target: (increment_stat("apps_opened"), webbrowser.open_new(u)))
             else:
                 path_val = Path(raw_path)
+                # If path doesn't exist locally, fallback to resource path or default icon
+                if not path_val.exists() and not Path(raw_path).is_absolute():
+                    path_val = resource_path(f"Assets/{filename}")
+
                 if app_type == "url":
                     act = lambda u=target: (increment_stat("apps_opened"), webbrowser.open_new(u))
                 elif app_type == "exe":
-                    act = lambda p=target: (increment_stat("apps_opened"), os.startfile(p))
+                    act = lambda p=target: (increment_stat("apps_opened"), launch_file(p))
                 else:
                     act = launch_app2
 
@@ -319,6 +348,7 @@ def load_apps():
     except Exception as e:
         print(f"Error loading config: {e}")
         return []
+
 
 apps_inventory = load_apps()
 
@@ -604,7 +634,7 @@ def openNewAppWindow():
 
         def run_user_app():
             try:
-                os.startfile(filepath)
+                launch_file(filepath)
             except Exception as e:
                 print(f"Error launching app: {e}")
 
