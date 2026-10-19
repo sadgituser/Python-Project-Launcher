@@ -12,9 +12,9 @@ It also includes features like a live Statistics Board and a random theme genera
 You can download the app as an executable file on the Releases page, or if you are feeling spicy then you can try and use the Python file!
 
 
-Check out my other project [here](https://github.com/sadgituser/python-random-password-generator) or my [Etsy Shop](https://theprintedcraftuk.etsy.com)!
+Check out my other project [here](https://github.com/sadgituser/python-random-password-generator), [here](https://github.com/sadgituser/Void-Contact) or my [Etsy Shop](https://theprintedcraftuk.etsy.com)!
 
-            ![The icon of my Etsy shop](/Assets/photo3.png)
+![The icon of my Etsy shop](/Assets/photo3.png)
 
 
 Made for the [Hackclub Terra](https://terra.hackclub.com) project for [Hackclub](https://hackclub.com).
